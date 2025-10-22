@@ -1,0 +1,30 @@
+// WaveDrom timing diagram definition for ping_timing_diagram.png.
+// View or modify this diagram at https://wavedrom.com/editor.html
+{ signal: [
+  {node: "ABCDEFG"},
+    { name: "PING[i]", wave: '345345',  data: "0 1 2 0 1 2"},
+    { name: "TIMER", wave: 'P.....', phase:0},
+    { name: "" , node: "ZYXWVUQ"},
+  ],
+  config: {hscale:2
+     },
+  edge: [
+     'A 0 ms',
+     'B 20 ms',
+     'C 40 ms',
+     'D 60 ms',
+     'E 80 ms',
+     'F 100 ms',
+     'G 120 ms...',
+	 'A-Z',
+     'B-Y',
+     'C-X',
+     'D-W',
+     'E-V',
+     'F-U',
+     'G-Q',
+    ],
+  foot:{
+   	tick:0
+ },
+}

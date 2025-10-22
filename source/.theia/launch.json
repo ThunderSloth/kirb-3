@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Kirb3_LP_MSPM0G3507",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb3_LP_MSPM0G3507",
+                "resourceId": "/Kirb3_LP_MSPM0G3507/kirb3_main.c"
+            }
+        },
+        {
+            "name": "timx_timer_mode_pwm_edge_sleep_LP_MSPM0G3507_nortos_ticlang",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "timx_timer_mode_pwm_edge_sleep_LP_MSPM0G3507_nortos_ticlang",
+                "resourceId": "/timx_timer_mode_pwm_edge_sleep_LP_MSPM0G3507_nortos_ticlang/timx_timer_mode_pwm_edge_sleep.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.c"
+            }
+        }
+    ]
+}

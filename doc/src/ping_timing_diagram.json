@@ -1,0 +1,39 @@
+// WaveDrom timing diagram definition for ping_timing_diagram.png.
+// View or modify this diagram at https://wavedrom.com/editor.html
+({
+  signal: [
+    { name: "",                            node: "AB......CD"},
+    { name: "DIR  ",  wave: "10......1"  },
+
+    [
+      "PING[i]",
+      { name: "IMASK ",wave: "01......0"},     
+      { name: "DOE ",  wave: "434.......",  node: "......", data: "IN OUT IN", phase:2 },
+      { name: "TRIG ", wave: "01d......0", node: ".EF....",       phase: 2 },
+      { name: "ECHO ", wave: "d0.1...0d",  node: "...G...HI" }
+    ],
+
+    { name: "TIMER ",                      node: "JK......LM" },
+    { name: "",                          node: "P" }
+  ],
+
+  edge: [
+    "F~>G 750 μs",
+    "G+H 115 μs – 18.5 ms",
+    "J ZERO",
+    "K CC0",
+    "L CC1",
+    "K-B",
+    "M LOAD.",
+    "M-D",
+    "N+O 20 ms",
+    "P Timing not to scale.",
+    "L-C",
+    "J-A",
+    "A 0 μs",
+    "B 5 μs",
+    "C 19.5 ms",
+    "D 20 ms.",
+  ],
+  config: { hscale: 2 }
+})
