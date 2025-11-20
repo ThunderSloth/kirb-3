@@ -16,6 +16,8 @@ ORDERED_OBJS += \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
 "./kyles_kirb-3_config.o" \
+"./Debug copy/ti_msp_dl_config.o" \
+"./targetConfigs/Debug/ti_msp_dl_config.o" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
@@ -28,7 +30,11 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Debug\ copy/subdir_vars.mk
+-include targetConfigs/Debug/subdir_vars.mk
 -include subdir_rules.mk
+-include Debug\ copy/subdir_rules.mk
+-include targetConfigs/Debug/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -146,8 +152,8 @@ kyles_final_proj.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" 
-	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" 
+	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" "Debug copy\ti_msp_dl_config.o" "targetConfigs\Debug\ti_msp_dl_config.o" 
+	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" "Debug copy\ti_msp_dl_config.d" "targetConfigs\Debug\ti_msp_dl_config.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
