@@ -9,6 +9,7 @@ SYSCFG_SRCS += \
 ../kyles_kirb-3.syscfg 
 
 C_SRCS += \
+../LaunchPad.c \
 ../clock.c \
 ../kyles_kirb-3.c \
 ./ti_msp_dl_config.c \
@@ -24,6 +25,7 @@ GEN_FILES += \
 ./ti_msp_dl_config.c 
 
 C_DEPS += \
+./LaunchPad.d \
 ./clock.d \
 ./kyles_kirb-3.d \
 ./ti_msp_dl_config.d \
@@ -34,6 +36,7 @@ GEN_OPTS += \
 ./device.opt 
 
 OBJS += \
+./LaunchPad.o \
 ./clock.o \
 ./kyles_kirb-3.o \
 ./ti_msp_dl_config.o \
@@ -46,6 +49,7 @@ GEN_MISC_FILES += \
 ./Event.dot 
 
 OBJS__QUOTED += \
+"LaunchPad.o" \
 "clock.o" \
 "kyles_kirb-3.o" \
 "ti_msp_dl_config.o" \
@@ -58,6 +62,7 @@ GEN_MISC_FILES__QUOTED += \
 "Event.dot" 
 
 C_DEPS__QUOTED += \
+"LaunchPad.d" \
 "clock.d" \
 "kyles_kirb-3.d" \
 "ti_msp_dl_config.d" \
@@ -70,6 +75,7 @@ GEN_FILES__QUOTED += \
 "ti_msp_dl_config.c" 
 
 C_SRCS__QUOTED += \
+"../LaunchPad.c" \
 "../clock.c" \
 "../kyles_kirb-3.c" \
 "./ti_msp_dl_config.c" \
