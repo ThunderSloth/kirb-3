@@ -113,12 +113,6 @@ void power_init(void)
 
 
 
-void GPIO_init(void)
-{
-    
-}
-
-
 
 void clock_init(void);
 {
