@@ -31,7 +31,7 @@ void RC_timer1_init(void);
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 
-
+// testing
 /*
 
 SYSCONFIG_WEAK void SYSCFG_DL_init(void)
@@ -106,3 +106,8 @@ RC_timer1_init()
 {
     
 }
+
+// git pull
+// git add .
+// git commit -m 'message here'
+// git push

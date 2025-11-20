@@ -11,7 +11,8 @@ SYSCFG_SRCS += \
 C_SRCS += \
 ../kyles_kirb-3.c \
 ./ti_msp_dl_config.c \
-C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c 
+C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
+../kyles_kirb-3_config.c 
 
 GEN_CMDS += \
 ./device_linker.cmd 
@@ -24,7 +25,8 @@ GEN_FILES += \
 C_DEPS += \
 ./kyles_kirb-3.d \
 ./ti_msp_dl_config.d \
-./startup_mspm0g350x_ticlang.d 
+./startup_mspm0g350x_ticlang.d \
+./kyles_kirb-3_config.d 
 
 GEN_OPTS += \
 ./device.opt 
@@ -32,7 +34,8 @@ GEN_OPTS += \
 OBJS += \
 ./kyles_kirb-3.o \
 ./ti_msp_dl_config.o \
-./startup_mspm0g350x_ticlang.o 
+./startup_mspm0g350x_ticlang.o \
+./kyles_kirb-3_config.o 
 
 GEN_MISC_FILES += \
 ./device.cmd.genlibs \
@@ -42,7 +45,8 @@ GEN_MISC_FILES += \
 OBJS__QUOTED += \
 "kyles_kirb-3.o" \
 "ti_msp_dl_config.o" \
-"startup_mspm0g350x_ticlang.o" 
+"startup_mspm0g350x_ticlang.o" \
+"kyles_kirb-3_config.o" 
 
 GEN_MISC_FILES__QUOTED += \
 "device.cmd.genlibs" \
@@ -52,7 +56,8 @@ GEN_MISC_FILES__QUOTED += \
 C_DEPS__QUOTED += \
 "kyles_kirb-3.d" \
 "ti_msp_dl_config.d" \
-"startup_mspm0g350x_ticlang.d" 
+"startup_mspm0g350x_ticlang.d" \
+"kyles_kirb-3_config.d" 
 
 GEN_FILES__QUOTED += \
 "device_linker.cmd" \
@@ -62,7 +67,8 @@ GEN_FILES__QUOTED += \
 C_SRCS__QUOTED += \
 "../kyles_kirb-3.c" \
 "./ti_msp_dl_config.c" \
-"C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" 
+"C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
+"../kyles_kirb-3_config.c" 
 
 SYSCFG_SRCS__QUOTED += \
 "../kyles_kirb-3.syscfg" 

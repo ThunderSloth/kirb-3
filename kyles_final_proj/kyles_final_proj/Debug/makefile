@@ -13,6 +13,7 @@ ORDERED_OBJS += \
 "./kyles_kirb-3.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
+"./kyles_kirb-3_config.o" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
@@ -136,15 +137,15 @@ all: $(OBJS) $(GEN_CMDS)
 kyles_final_proj.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"C:/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
+	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"C:/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"C:/Users/kyles/OneDrive/Desktop/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"C:/Users/kyles/OneDrive/Desktop/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" 
-	-$(RM) "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" 
+	-$(RM) "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" 
+	-$(RM) "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
