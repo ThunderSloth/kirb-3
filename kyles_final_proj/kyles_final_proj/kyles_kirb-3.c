@@ -14,6 +14,7 @@ int main(void)
     }
 
     SYSCFG_DL_init();
+    config_init();
 
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_TIM1_INST_INT_IRQN);
