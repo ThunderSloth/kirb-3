@@ -70,7 +70,7 @@ void config_init(void)
 
 void power_init(void)
 {
-     // Reset two GPIO peripherals
+    // Reset two GPIO peripherals
     // DL_GPIO_reset(GPIOA);
     GPIOA->GPRCM.RSTCTL = (GPIO_RSTCTL_KEY_UNLOCK_W |
                             GPIO_RSTCTL_RESETSTKYCLR_CLR |
@@ -112,9 +112,14 @@ void power_init(void)
 }
 
 
+void GPIO_init(void)
+{
+
+}
 
 
-void clock_init(void);
+
+void clock_init(void)
 {
 
 }
