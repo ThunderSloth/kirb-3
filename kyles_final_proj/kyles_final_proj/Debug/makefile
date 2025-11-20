@@ -10,6 +10,7 @@ GEN_OPTS__FLAG := @"./device.opt"
 GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" 
 
 ORDERED_OBJS += \
+"./clock.o" \
 "./kyles_kirb-3.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
@@ -144,8 +145,8 @@ kyles_final_proj.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" 
-	-$(RM) "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" 
+	-$(RM) "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" 
+	-$(RM) "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

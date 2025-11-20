@@ -9,6 +9,7 @@ SYSCFG_SRCS += \
 ../kyles_kirb-3.syscfg 
 
 C_SRCS += \
+../clock.c \
 ../kyles_kirb-3.c \
 ./ti_msp_dl_config.c \
 C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
@@ -23,6 +24,7 @@ GEN_FILES += \
 ./ti_msp_dl_config.c 
 
 C_DEPS += \
+./clock.d \
 ./kyles_kirb-3.d \
 ./ti_msp_dl_config.d \
 ./startup_mspm0g350x_ticlang.d \
@@ -32,6 +34,7 @@ GEN_OPTS += \
 ./device.opt 
 
 OBJS += \
+./clock.o \
 ./kyles_kirb-3.o \
 ./ti_msp_dl_config.o \
 ./startup_mspm0g350x_ticlang.o \
@@ -43,6 +46,7 @@ GEN_MISC_FILES += \
 ./Event.dot 
 
 OBJS__QUOTED += \
+"clock.o" \
 "kyles_kirb-3.o" \
 "ti_msp_dl_config.o" \
 "startup_mspm0g350x_ticlang.o" \
@@ -54,6 +58,7 @@ GEN_MISC_FILES__QUOTED += \
 "Event.dot" 
 
 C_DEPS__QUOTED += \
+"clock.d" \
 "kyles_kirb-3.d" \
 "ti_msp_dl_config.d" \
 "startup_mspm0g350x_ticlang.d" \
@@ -65,6 +70,7 @@ GEN_FILES__QUOTED += \
 "ti_msp_dl_config.c" 
 
 C_SRCS__QUOTED += \
+"../clock.c" \
 "../kyles_kirb-3.c" \
 "./ti_msp_dl_config.c" \
 "C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
