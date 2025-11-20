@@ -27,6 +27,15 @@
                 "name": "Kirb-3-MSPM0G3507",
                 "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.c"
             }
+        },
+        {
+            "name": "pwm_led_driver_LP_MSPM0G3507_nortos_ticlang",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "pwm_led_driver_LP_MSPM0G3507_nortos_ticlang",
+                "resourceId": "/pwm_led_driver_LP_MSPM0G3507_nortos_ticlang/pwm_led_driver.c"
+            }
         }
     ]
 }

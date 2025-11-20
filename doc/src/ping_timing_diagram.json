@@ -9,7 +9,7 @@
       "PING[i]",
       { name: "IMASK ",wave: "01......0"},     
       { name: "DOE ",  wave: "434.......",  node: "......", data: "IN OUT IN", phase:2 },
-      { name: "TRIG ", wave: "01d......0", node: ".EF....",       phase: 2 },
+      { name: "TRIG ", wave: "01d.......", node: ".EF....",       phase: 2 },
       { name: "ECHO ", wave: "d0.1...0d",  node: "...G...HI" }
     ],
 

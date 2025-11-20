@@ -19,6 +19,7 @@
 \usepackage{makecell}     % for multi-line table cells
 \usepackage{tabularx}     % auto-wrapping column type X
 \sisetup{detect-all, per-mode=symbol} % nicer units
+\usepackage{enumitem}
 
 % Keep hyperref LAST
 \usepackage{hyperref}
@@ -30,7 +31,7 @@
 % Page Layout
 \geometry{
     textheight=9in,
-    textwidth=5.5in,
+    textwidth=6.5in,
     top=1in,
     headheight=12pt,
     headsep=25pt,
@@ -146,5 +147,116 @@ As shown in the single-sensor timing diagram, each measurement cycle consists of
   \item This schedule avoids cross-interference while maintaining a \SI{50}{Hz} global timing base.
   \item Additional sensors can be supported by proportionally extending the total cycle period.
 \end{enumerate}
+
+\newpage
+\begin{center}
+    {\LARGE \textbf{Differential-Drive Odometry}}\\[0.5em]
+\end{center}
+\noindent
+\textbf{Odometry} refers to estimating a robot’s position $(x, y)$ and orientation $\theta$ over time by integrating wheel encoder measurements. 
+In a differential-drive system, changes in left and right wheel displacements determine the robot’s forward motion and rotation.
+
+\begin{table}[h]
+\centering
+\scriptsize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}llp{8.5cm}@{}}
+\toprule
+\textbf{Symbol} & \textbf{Name / Role} & \textbf{Definition / Notes} \\
+\midrule
+$N_L,\;N_R$ & Encoder counts (cum.) & Cumulative quadrature counts (ticks) for left/right wheels. \\
+$\Delta N_L,\;\Delta N_R$ & Encoder count increments & Counts accumulated since the last update step (ticks). \\
+$T$ & Ticks per revolution & Encoder ticks per wheel revolution (include quadrature mode and gearbox). \\
+$R$ & Wheel radius & In meters. Used to convert ticks $\to$ distance. \\
+$b$ & Wheel track & Lateral distance between wheel contact patches (m). \\
+$(x,\;y,\;\theta)$ & Robot pose & World-frame position and heading; $\theta$ measured CCW from $+x$ (radians). \\
+\midrule
+$\Delta s_L,\;\Delta s_R$ & Wheel travel (step) & Left/right wheel arc lengths over the last step:
+$\displaystyle \Delta s_L=\frac{2\pi R}{T}\,\Delta N_L,\quad
+\Delta s_R=\frac{2\pi R}{T}\,\Delta N_R.$ \\
+$\Delta s$ & Chassis forward travel (step) & Body-frame arc length over the last step:
+$\displaystyle \Delta s=\tfrac{1}{2}(\Delta s_R+\Delta s_L).$ \\
+$\Delta \theta$ & Heading change (step) & Turn over the last step:
+$\displaystyle \Delta \theta=\frac{\Delta s_R-\Delta s_L}{b}.$ \\
+$s$ & Path length (cumulative) & Total forward distance traveled along the chassis arc. Update each step by
+$\displaystyle s \leftarrow s+\Delta s.$ (Some notes use $s$ for a single step; here $s$ is cumulative and $\Delta s$ is per step.) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% Requires: \usepackage{amsmath} % (and optionally \usepackage{enumitem} for spacing)
+\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*, itemsep=3pt, topsep=2pt]
+
+  \item \textbf{Wheel travel.}  
+  Converts encoder ticks into physical distance for each wheel.  
+  Each tick represents a small rotation, and multiplying by $\frac{2\pi R}{T}$ gives the linear displacement:
+  \[
+    \Delta s_L=\frac{2\pi R}{T}\,\Delta N_L,\qquad
+    \Delta s_R=\frac{2\pi R}{T}\,\Delta N_R
+  \]
+
+  \item \textbf{Differential motion.}  
+  Computes how far the robot moved forward and how much it rotated.  
+  The average wheel travel gives forward motion, while the difference gives rotation about the centerline:
+  \[
+    \Delta s=\frac{\Delta s_R+\Delta s_L}{2},\qquad
+    \Delta\theta=\frac{\Delta s_R-\Delta s_L}{b}
+  \]
+
+  \item \textbf{Pose update (midpoint form).}  
+  Updates global position $(x, y)$ and heading $\theta$ using the arc traced during motion.  
+  The midpoint form accounts for the slight curvature of the path:
+  \[
+    x \leftarrow x + \Delta s \cos\!\left(\theta+\tfrac{\Delta\theta}{2}\right),\quad
+    y \leftarrow y + \Delta s \sin\!\left(\theta+\tfrac{\Delta\theta}{2}\right),\quad
+    \theta \leftarrow \mathrm{wrap}(\theta+\Delta\theta)
+  \]
+  This effectively “walks” the pose forward by one small motion step.
+
+  \item \textbf{Exact arc formulation (optional).}  
+  When the robot turns significantly, you can compute the exact circular arc rather than the midpoint approximation.  
+  The instantaneous center of curvature (ICC) radius is:
+  \[
+    R_{\mathrm{icc}}=\frac{\Delta s}{\Delta\theta}
+    =\frac{b}{2}\,\frac{\Delta s_R+\Delta s_L}{\Delta s_R-\Delta s_L},
+  \]
+  and the pose update follows the true circular trajectory:
+  \[
+    x \leftarrow x + R_{\mathrm{icc}}\,[\sin(\theta+\Delta\theta)-\sin\theta],\quad
+    y \leftarrow y - R_{\mathrm{icc}}\,[\cos(\theta+\Delta\theta)-\cos\theta],\quad
+    \theta \leftarrow \mathrm{wrap}(\theta+\Delta\theta)
+  \]
+  If $\Delta\theta\approx 0$ (straight motion), this simplifies to
+  \[
+    x \leftarrow x+\Delta s\cos\theta,\qquad
+    y \leftarrow y+\Delta s\sin\theta.
+  \]
+
+  \item \textbf{Velocities (fixed timestep $\Delta t$).}  
+  Converts incremental motion into linear and angular velocities.  
+  These describe the robot’s instantaneous motion:
+  \[
+    v_L=\frac{2\pi R}{T}\frac{\Delta N_L}{\Delta t},\qquad
+    v_R=\frac{2\pi R}{T}\frac{\Delta N_R}{\Delta t},\qquad
+    v=\frac{v_R+v_L}{2},\quad
+    \omega=\frac{v_R-v_L}{b}
+  \]
+  Integrating these gives continuous-time motion:
+  \[
+    \dot x=v\cos\theta,\qquad
+    \dot y=v\sin\theta,\qquad
+    \dot\theta=\omega.
+  \]
+
+\end{enumerate}
+
+\textbf{Notes.}
+\begin{enumerate}
+  \item Ensure encoder signs are consistent so both wheels forward give $\Delta\theta\approx 0$.
+  \item Include gearbox ratio and quadrature multiplication in $T$.
+  \item Measure $b$ between effective wheel contact points; small errors bias $\theta$.
+  \item Odometry drifts over time; fuse with IMU/vision for long runs.
+\end{enumerate}
+
 \end{document}
 

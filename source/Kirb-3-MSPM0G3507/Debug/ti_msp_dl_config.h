@@ -77,27 +77,87 @@ extern "C" {
 
 
 
-/* Defines for PWM_0 */
-#define PWM_0_INST                                                         TIMG6
-#define PWM_0_INST_IRQHandler                                   TIMG6_IRQHandler
-#define PWM_0_INST_INT_IRQN                                     (TIMG6_INT_IRQn)
-#define PWM_0_INST_CLK_FREQ                                              8000000
+/* Defines for MOTOR_PWM */
+#define MOTOR_PWM_INST                                                     TIMA1
+#define MOTOR_PWM_INST_IRQHandler                               TIMA1_IRQHandler
+#define MOTOR_PWM_INST_INT_IRQN                                 (TIMA1_INT_IRQn)
+#define MOTOR_PWM_INST_CLK_FREQ                                          1000000
+/* GPIO defines for channel 0 */
+#define GPIO_MOTOR_PWM_C0_PORT                                             GPIOB
+#define GPIO_MOTOR_PWM_C0_PIN                                      DL_GPIO_PIN_2
+#define GPIO_MOTOR_PWM_C0_IOMUX                                  (IOMUX_PINCM15)
+#define GPIO_MOTOR_PWM_C0_IOMUX_FUNC                 IOMUX_PINCM15_PF_TIMA1_CCP0
+#define GPIO_MOTOR_PWM_C0_IDX                                DL_TIMER_CC_0_INDEX
 /* GPIO defines for channel 1 */
-#define GPIO_PWM_0_C1_PORT                                                 GPIOA
-#define GPIO_PWM_0_C1_PIN                                         DL_GPIO_PIN_22
-#define GPIO_PWM_0_C1_IOMUX                                      (IOMUX_PINCM47)
-#define GPIO_PWM_0_C1_IOMUX_FUNC                     IOMUX_PINCM47_PF_TIMG6_CCP1
-#define GPIO_PWM_0_C1_IDX                                    DL_TIMER_CC_1_INDEX
+#define GPIO_MOTOR_PWM_C1_PORT                                             GPIOB
+#define GPIO_MOTOR_PWM_C1_PIN                                      DL_GPIO_PIN_3
+#define GPIO_MOTOR_PWM_C1_IOMUX                                  (IOMUX_PINCM16)
+#define GPIO_MOTOR_PWM_C1_IOMUX_FUNC                 IOMUX_PINCM16_PF_TIMA1_CCP1
+#define GPIO_MOTOR_PWM_C1_IDX                                DL_TIMER_CC_1_INDEX
+
+
+
+/* Defines for RC_TIM0 */
+#define RC_TIM0_INST                                                     (TIMA0)
+#define RC_TIM0_INST_IRQHandler                                 TIMA0_IRQHandler
+#define RC_TIM0_INST_INT_IRQN                                   (TIMA0_INT_IRQn)
+#define RC_TIM0_INST_LOAD_VALUE                                         (64999U)
+/* GPIO defines for channel 0 */
+#define GPIO_RC_TIM0_C0_PORT                                               GPIOA
+#define GPIO_RC_TIM0_C0_PIN                                        DL_GPIO_PIN_8
+#define GPIO_RC_TIM0_C0_IOMUX                                    (IOMUX_PINCM19)
+#define GPIO_RC_TIM0_C0_IOMUX_FUNC                   IOMUX_PINCM19_PF_TIMA0_CCP0
+/* GPIO defines for channel 0 */
+#define GPIO_RC_TIM0_C0_PORT                                               GPIOA
+#define GPIO_RC_TIM0_C0_PIN                                        DL_GPIO_PIN_8
+#define GPIO_RC_TIM0_C0_IOMUX                                    (IOMUX_PINCM19)
+#define GPIO_RC_TIM0_C0_IOMUX_FUNC                   IOMUX_PINCM19_PF_TIMA0_CCP0
+/* GPIO defines for channel 2 */
+#define GPIO_RC_TIM0_C2_PORT                                               GPIOA
+#define GPIO_RC_TIM0_C2_PIN                                       DL_GPIO_PIN_15
+#define GPIO_RC_TIM0_C2_IOMUX                                    (IOMUX_PINCM37)
+#define GPIO_RC_TIM0_C2_IOMUX_FUNC                   IOMUX_PINCM37_PF_TIMA0_CCP2
+/* GPIO defines for channel 3 */
+#define GPIO_RC_TIM0_C3_PORT                                               GPIOA
+#define GPIO_RC_TIM0_C3_PIN                                       DL_GPIO_PIN_25
+#define GPIO_RC_TIM0_C3_IOMUX                                    (IOMUX_PINCM55)
+#define GPIO_RC_TIM0_C3_IOMUX_FUNC                   IOMUX_PINCM55_PF_TIMA0_CCP3
+
+/* Defines for RC_TIM1 */
+#define RC_TIM1_INST                                                     (TIMG7)
+#define RC_TIM1_INST_IRQHandler                                 TIMG7_IRQHandler
+#define RC_TIM1_INST_INT_IRQN                                   (TIMG7_INT_IRQn)
+#define RC_TIM1_INST_LOAD_VALUE                                         (64999U)
+/* GPIO defines for channel 0 */
+#define GPIO_RC_TIM1_C0_PORT                                               GPIOA
+#define GPIO_RC_TIM1_C0_PIN                                       DL_GPIO_PIN_28
+#define GPIO_RC_TIM1_C0_IOMUX                                     (IOMUX_PINCM3)
+#define GPIO_RC_TIM1_C0_IOMUX_FUNC                    IOMUX_PINCM3_PF_TIMG7_CCP0
+/* GPIO defines for channel 0 */
+#define GPIO_RC_TIM1_C0_PORT                                               GPIOA
+#define GPIO_RC_TIM1_C0_PIN                                       DL_GPIO_PIN_28
+#define GPIO_RC_TIM1_C0_IOMUX                                     (IOMUX_PINCM3)
+#define GPIO_RC_TIM1_C0_IOMUX_FUNC                    IOMUX_PINCM3_PF_TIMG7_CCP0
 
 
 
 
-/* Port definition for Pin Group GPIO_GRP_0 */
-#define GPIO_GRP_0_PORT                                                  (GPIOB)
 
-/* Defines for PIN_0: GPIOB.13 with pinCMx 30 on package pin 1 */
-#define GPIO_GRP_0_PIN_0_PIN                                    (DL_GPIO_PIN_13)
-#define GPIO_GRP_0_PIN_0_IOMUX                                   (IOMUX_PINCM30)
+
+/* Port definition for Pin Group RC_IN */
+#define RC_IN_PORT                                                       (GPIOB)
+
+/* Defines for CH5: GPIOB.13 with pinCMx 30 on package pin 1 */
+// pins affected by this interrupt request:["CH5","CH6"]
+#define RC_IN_INT_IRQN                                          (GPIOB_INT_IRQn)
+#define RC_IN_INT_IIDX                          (DL_INTERRUPT_GROUP1_IIDX_GPIOB)
+#define RC_IN_CH5_IIDX                                      (DL_GPIO_IIDX_DIO13)
+#define RC_IN_CH5_PIN                                           (DL_GPIO_PIN_13)
+#define RC_IN_CH5_IOMUX                                          (IOMUX_PINCM30)
+/* Defines for CH6: GPIOB.20 with pinCMx 48 on package pin 19 */
+#define RC_IN_CH6_IIDX                                      (DL_GPIO_IIDX_DIO20)
+#define RC_IN_CH6_PIN                                           (DL_GPIO_PIN_20)
+#define RC_IN_CH6_IOMUX                                          (IOMUX_PINCM48)
 
 
 /* clang-format on */
@@ -106,7 +166,9 @@ void SYSCFG_DL_init(void);
 void SYSCFG_DL_initPower(void);
 void SYSCFG_DL_GPIO_init(void);
 void SYSCFG_DL_SYSCTL_init(void);
-void SYSCFG_DL_PWM_0_init(void);
+void SYSCFG_DL_MOTOR_PWM_init(void);
+void SYSCFG_DL_RC_TIM0_init(void);
+void SYSCFG_DL_RC_TIM1_init(void);
 
 
 bool SYSCFG_DL_saveConfiguration(void);
