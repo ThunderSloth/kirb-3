@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Kirb-3-MSPM0G3507",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.syscfg"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (1)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.c"
+            }
+        }
+    ]
+}
