@@ -32,7 +32,7 @@ void RC_timer1_init(void);
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 
-
+// testing
 /*
 
 SYSCONFIG_WEAK void SYSCFG_DL_init(void)
@@ -128,6 +128,10 @@ void clock_init(void)
 
 void PWM_init(void)
 {
+  IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
+
+  GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
+}  
 
 }
 
@@ -148,3 +152,17 @@ void RC_timer1_init(void)
 
 
 
+<<<<<<< HEAD
+
+
+RC_timer1_init()
+{
+    
+}
+
+// git pull
+// git add .
+// git commit -m 'message here'
+// git push
+=======
+>>>>>>> 04f1af6da53a3eaf02e1da99cedda0079a26c278
