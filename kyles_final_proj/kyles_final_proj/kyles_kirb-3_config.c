@@ -119,17 +119,20 @@ void power_init(void)
                             GPIO_RSTCTL_RESETSTKYCLR_CLR |
                             GPIO_RSTCTL_RESETASSERT_ASSERT);
 
-    //   DL_TimerA_reset(MOTOR_PWM_INST);
+    //DL_TimerA_reset(MOTOR_PWM_INST);
+    //Resets the PWM instance of Timer A
     MOTOR_PWM_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
 
-    //    DL_TimerA_reset(RC_TIM0_INST);
+    //DL_TimerA_reset(RC_TIM0_INST);
+    //Resets the TIM0 instance of Timer A
     RC_TIM0_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
 
     //   DL_TimerG_reset(RC_TIM1_INST);
+    //Resets the TIM1 instance of Timer G
     RC_TIM1_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
@@ -139,6 +142,7 @@ void power_init(void)
     GPIOB->GPRCM.PWREN = (GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE);
 
     //DL_TimerA_enablePower(MOTOR_PWM_INST);
+    //
     MOTOR_PWM_INST->GPRCM.PWREN = (GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE);
 
     // DL_TimerA_enablePower(RC_TIM0_INST);
@@ -222,7 +226,7 @@ void clock_init(void)
   //Sets the system oscillator to 32MHz
   update_Reg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
         SYSCTL_SYSOSCCFG_FREQ_MASK);
-  //Enables the medium frequency clock (4Mhz)
+  //Enables the medium frequency clock (4MHz)
   SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
   //Sets up ultra low power clock (not divided)
   update_Reg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
@@ -268,14 +272,7 @@ void PWM_init(void)
   
 }  
 
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
-
-=======
->>>>>>> 2e291750a239ac3764df4a580da9d48cbea864d2
->>>>>>> 5e52a59f2db1fcb709821a65fa52079988ca4dfa
 
 
 /*
@@ -362,7 +359,7 @@ void RC_timer0_init(void)
 }
 
 
-<<<<<<< HEAD
+
 
 void RC_timer1_init(void)
 {
@@ -373,14 +370,6 @@ void RC_timer1_init(void)
 
 
 
-
-RC_timer1_init()
-=======
-void RC_timer1_init()
->>>>>>> 2e291750a239ac3764df4a580da9d48cbea864d2
-{
-    
-}
 
 
 
@@ -414,9 +403,6 @@ typedef enum {
 // git add .
 // git commit -m 'message here'
 // git push
-<<<<<<< HEAD
-=======
->>>>>>> 04f1af6da53a3eaf02e1da99cedda0079a26c278
 
  void update_Reg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
 {
@@ -426,5 +412,4 @@ typedef enum {
     temp_reg  = temp_reg & ~mask;
     *reg = temp_reg | (value & mask);
 }
-=======
->>>>>>> 5e52a59f2db1fcb709821a65fa52079988ca4dfa
+
