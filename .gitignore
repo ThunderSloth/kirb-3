@@ -56,3 +56,8 @@ dkms.conf
 
 # Apple
 *.DS_Store
+
+# Debug
+Debug/
+**/Debug/
+

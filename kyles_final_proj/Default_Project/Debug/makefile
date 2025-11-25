@@ -2,9 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-SHELL = cmd.exe
-
-CG_TOOL_ROOT := C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
+CG_TOOL_ROOT := /Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
 
 GEN_OPTS__FLAG := 
 GEN_CMDS__FLAG := 
@@ -18,14 +16,13 @@ ORDERED_OBJS += \
 "./spi.o" \
 "./uart.o" \
 "./ticlang/startup_mspm0g3507_ticlang.o" \
-"../mspm0g3507.cmd" \
 $(GEN_CMDS__FLAG) \
 -Wl,-llibc.a \
 
 -include ../makefile.init
 
-RM := DEL /F
-RMDIR := RMDIR /S/Q
+RM := rm -rf
+RMDIR := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
@@ -136,22 +133,22 @@ EXE_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+all: $(OBJS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "Default_Project.out"
 
 # Tool invocations
-Default_Project.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+Default_Project.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O0 -D__MSPM0G3507__ -gdwarf-3 -Wl,-m"Default_Project.map" -Wl,--heap_size=0x800 -Wl,--stack_size=512 -Wl,-i"C:/ti/mspm0_sdk_2_04_00_06/source" -Wl,-i"C:/MCC/Fall 2025/CSC202205/csc202_workspace/Default_Project" -Wl,-i"C:/MCC/Fall 2025/CSC202205/csc202_workspace/Default_Project/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="Default_Project_linkInfo.xml" -Wl,--rom_model -o "Default_Project.out" $(ORDERED_OBJS)
+	"/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang" -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O0 -D__MSPM0G3507__ -gdwarf-3 -Wl,-m"Default_Project.map" -Wl,--heap_size=0x800 -Wl,--stack_size=512 -Wl,-i"/Users/elibell/ti/mspm0_sdk_2_06_00_05/source" -Wl,-i"/Users/elibell/Documents/kirb-3/kyles_final_proj/Default_Project" -Wl,-i"/Users/elibell/Documents/kirb-3/kyles_final_proj/Default_Project/Debug/syscfg" -Wl,-i"/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="Default_Project_linkInfo.xml" -Wl,--rom_model -o "Default_Project.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "LaunchPad.o" "adc.o" "clock.o" "lcd1602.o" "main.o" "spi.o" "uart.o" "ticlang\startup_mspm0g3507_ticlang.o" 
-	-$(RM) "LaunchPad.d" "adc.d" "clock.d" "lcd1602.d" "main.d" "spi.d" "uart.d" "ticlang\startup_mspm0g3507_ticlang.d" 
+	-$(RM) "LaunchPad.o" "adc.o" "clock.o" "lcd1602.o" "main.o" "spi.o" "uart.o" "ticlang/startup_mspm0g3507_ticlang.o" 
+	-$(RM) "LaunchPad.d" "adc.d" "clock.d" "lcd1602.d" "main.d" "spi.d" "uart.d" "ticlang/startup_mspm0g3507_ticlang.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
