@@ -252,6 +252,10 @@ void PWM_init(void)
     // 10. Enable the counter by setting TIMx.CTRCTL.EN = 1.
 }  
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 2e291750a239ac3764df4a580da9d48cbea864d2
 
 
 /*
@@ -338,10 +342,53 @@ void RC_timer0_init(void)
 }
 
 
+<<<<<<< HEAD
+
+void RC_timer1_init(void)
+{
+
+}
+
+
+
+
+
+
+RC_timer1_init()
+=======
 void RC_timer1_init()
+>>>>>>> 2e291750a239ac3764df4a580da9d48cbea864d2
 {
     
 }
+
+
+
+
+
+typedef struct {
+    /* Selects timer module clock source DL_TIMER_CLOCK*/
+    DL_TIMER_CLOCK clockSel;
+    /* Selects the timer module clock divide ratio DL_TIMER_CLOCK_DIVIDE */
+    DL_TIMER_CLOCK_DIVIDE divideRatio;
+    /* Selects the timer module clock prescaler. Valid range 0-255 */
+    uint8_t prescale;
+} DL_Timer_ClockConfig;
+
+typedef enum {
+    /*! Selects BUSCLK as clock source */
+    DL_TIMER_CLOCK_BUSCLK = GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE,
+    /*! Selects 2X BUSCLK as clock source */
+    DL_TIMER_CLOCK_2X_BUSCLK = GPTIMER_CLKSEL_BUS2XCLK_SEL_ENABLE,
+    /*! Selects MFCLK as clock source */
+    DL_TIMER_CLOCK_MFCLK = GPTIMER_CLKSEL_MFCLK_SEL_ENABLE,
+    /*! Selects LFCLK as clock source */
+    DL_TIMER_CLOCK_LFCLK = GPTIMER_CLKSEL_LFCLK_SEL_ENABLE,
+    /*! Disables selected clock source */
+    DL_TIMER_CLOCK_DISABLE = GPTIMER_CLKSEL_LFCLK_SEL_DISABLE,
+} DL_TIMER_CLOCK;
+
+
 
 // git pull
 // git add .

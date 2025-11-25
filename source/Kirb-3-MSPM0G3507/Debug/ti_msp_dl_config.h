@@ -97,23 +97,6 @@ extern "C" {
 
 
 
-
-/* Defines for QEI_0 */
-#define QEI_0_INST                                                         TIMG8
-#define QEI_0_INST_IRQHandler                                   TIMG8_IRQHandler
-#define QEI_0_INST_INT_IRQN                                     (TIMG8_INT_IRQn)
-/* Pin configuration defines for QEI_0 PHA Pin */
-#define GPIO_QEI_0_PHA_PORT                                                GPIOB
-#define GPIO_QEI_0_PHA_PIN                                         DL_GPIO_PIN_6
-#define GPIO_QEI_0_PHA_IOMUX                                     (IOMUX_PINCM23)
-#define GPIO_QEI_0_PHA_IOMUX_FUNC                    IOMUX_PINCM23_PF_TIMG8_CCP0
-/* Pin configuration defines for QEI_0 PHB Pin */
-#define GPIO_QEI_0_PHB_PORT                                                GPIOB
-#define GPIO_QEI_0_PHB_PIN                                        DL_GPIO_PIN_16
-#define GPIO_QEI_0_PHB_IOMUX                                     (IOMUX_PINCM33)
-#define GPIO_QEI_0_PHB_IOMUX_FUNC                    IOMUX_PINCM33_PF_TIMG8_CCP1
-
-
 /* Defines for RC_TIM0 */
 #define RC_TIM0_INST                                                     (TIMA0)
 #define RC_TIM0_INST_IRQHandler                                 TIMA0_IRQHandler
@@ -156,31 +139,7 @@ extern "C" {
 #define GPIO_RC_TIM1_C0_IOMUX                                     (IOMUX_PINCM3)
 #define GPIO_RC_TIM1_C0_IOMUX_FUNC                    IOMUX_PINCM3_PF_TIMG7_CCP0
 
-/* Defines for ECHO_TIM */
-#define ECHO_TIM_INST                                                    (TIMG0)
-#define ECHO_TIM_INST_IRQHandler                                TIMG0_IRQHandler
-#define ECHO_TIM_INST_INT_IRQN                                  (TIMG0_INT_IRQn)
-#define ECHO_TIM_INST_LOAD_VALUE                                            (0U)
-/* GPIO defines for channel 0 */
-#define GPIO_ECHO_TIM_C0_PORT                                              GPIOA
-#define GPIO_ECHO_TIM_C0_PIN                                      DL_GPIO_PIN_12
-#define GPIO_ECHO_TIM_C0_IOMUX                                   (IOMUX_PINCM34)
-#define GPIO_ECHO_TIM_C0_IOMUX_FUNC                  IOMUX_PINCM34_PF_TIMG0_CCP0
-/* GPIO defines for channel 0 */
-#define GPIO_ECHO_TIM_C0_PORT                                              GPIOA
-#define GPIO_ECHO_TIM_C0_PIN                                      DL_GPIO_PIN_12
-#define GPIO_ECHO_TIM_C0_IOMUX                                   (IOMUX_PINCM34)
-#define GPIO_ECHO_TIM_C0_IOMUX_FUNC                  IOMUX_PINCM34_PF_TIMG0_CCP0
 
-
-
-
-
-/* Defines for PING_SCHED_TIM */
-#define PING_SCHED_TIM_INST                                              (TIMG6)
-#define PING_SCHED_TIM_INST_IRQHandler                          TIMG6_IRQHandler
-#define PING_SCHED_TIM_INST_INT_IRQN                            (TIMG6_INT_IRQn)
-#define PING_SCHED_TIM_INST_LOAD_VALUE                                  (19999U)
 
 
 
@@ -199,47 +158,6 @@ extern "C" {
 #define RC_IN_CH6_IIDX                                      (DL_GPIO_IIDX_DIO20)
 #define RC_IN_CH6_PIN                                           (DL_GPIO_PIN_20)
 #define RC_IN_CH6_IOMUX                                          (IOMUX_PINCM48)
-/* Defines for BUF_EN: GPIOB.17 with pinCMx 43 on package pin 14 */
-#define PING_BUF_EN_PORT                                                 (GPIOB)
-#define PING_BUF_EN_PIN                                         (DL_GPIO_PIN_17)
-#define PING_BUF_EN_IOMUX                                        (IOMUX_PINCM43)
-/* Defines for BUF_DIR: GPIOB.12 with pinCMx 29 on package pin 64 */
-#define PING_BUF_DIR_PORT                                                (GPIOB)
-#define PING_BUF_DIR_PIN                                        (DL_GPIO_PIN_12)
-#define PING_BUF_DIR_IOMUX                                       (IOMUX_PINCM29)
-/* Defines for MUX0_EN: GPIOA.17 with pinCMx 39 on package pin 10 */
-#define PING_MUX0_EN_PORT                                                (GPIOA)
-#define PING_MUX0_EN_PIN                                        (DL_GPIO_PIN_17)
-#define PING_MUX0_EN_IOMUX                                       (IOMUX_PINCM39)
-/* Defines for MUX1_EN: GPIOA.16 with pinCMx 38 on package pin 9 */
-#define PING_MUX1_EN_PORT                                                (GPIOA)
-#define PING_MUX1_EN_PIN                                        (DL_GPIO_PIN_16)
-#define PING_MUX1_EN_IOMUX                                       (IOMUX_PINCM38)
-/* Defines for MUX_SEL0: GPIOB.18 with pinCMx 44 on package pin 15 */
-#define PING_MUX_SEL0_PORT                                               (GPIOB)
-#define PING_MUX_SEL0_PIN                                       (DL_GPIO_PIN_18)
-#define PING_MUX_SEL0_IOMUX                                      (IOMUX_PINCM44)
-/* Defines for MUX_SEL1: GPIOA.18 with pinCMx 40 on package pin 11 */
-#define PING_MUX_SEL1_PORT                                               (GPIOA)
-#define PING_MUX_SEL1_PIN                                       (DL_GPIO_PIN_18)
-#define PING_MUX_SEL1_IOMUX                                      (IOMUX_PINCM40)
-/* Defines for MUX_SEL2: GPIOA.24 with pinCMx 54 on package pin 25 */
-#define PING_MUX_SEL2_PORT                                               (GPIOA)
-#define PING_MUX_SEL2_PIN                                       (DL_GPIO_PIN_24)
-#define PING_MUX_SEL2_IOMUX                                      (IOMUX_PINCM54)
-/* Defines for PING_BUS: GPIOA.12 with pinCMx 34 on package pin 5 */
-#define PING_PING_BUS_PORT                                               (GPIOA)
-#define PING_PING_BUS_PIN                                       (DL_GPIO_PIN_12)
-#define PING_PING_BUS_IOMUX                                      (IOMUX_PINCM34)
-/* Port definition for Pin Group QEI */
-#define QEI_PORT                                                         (GPIOB)
-
-/* Defines for QEI1_A: GPIOB.7 with pinCMx 24 on package pin 59 */
-#define QEI_QEI1_A_PIN                                           (DL_GPIO_PIN_7)
-#define QEI_QEI1_A_IOMUX                                         (IOMUX_PINCM24)
-/* Defines for QEI1_B: GPIOB.0 with pinCMx 12 on package pin 47 */
-#define QEI_QEI1_B_PIN                                           (DL_GPIO_PIN_0)
-#define QEI_QEI1_B_IOMUX                                         (IOMUX_PINCM12)
 
 
 /* clang-format on */
@@ -249,11 +167,8 @@ void SYSCFG_DL_initPower(void);
 void SYSCFG_DL_GPIO_init(void);
 void SYSCFG_DL_SYSCTL_init(void);
 void SYSCFG_DL_MOTOR_PWM_init(void);
-void SYSCFG_DL_QEI_0_init(void);
 void SYSCFG_DL_RC_TIM0_init(void);
 void SYSCFG_DL_RC_TIM1_init(void);
-void SYSCFG_DL_ECHO_TIM_init(void);
-void SYSCFG_DL_PING_SCHED_TIM_init(void);
 
 
 bool SYSCFG_DL_saveConfiguration(void);

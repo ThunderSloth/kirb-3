@@ -56,5 +56,3 @@ dkms.conf
 
 # Apple
 *.DS_Store
-Debug/.clangd/
-compile_commands.json

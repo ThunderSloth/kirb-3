@@ -1,21 +1,21 @@
 // WaveDrom timing diagram definition for ping_timing_diagram.png.
 // View or modify this diagram at https://wavedrom.com/editor.html
 { signal: [
-  {node: "ABCDEFG", period: 3},
-    { name: "Active Sensor (PING[i]) ", wave: '3..4..5..x|.8..3..',  data: "0 1 2 n 0"},
-  { name: "Schedule Timer ", wave: 'P..|..', period:3,},
-  { name: "" , node: "ZYXWVUQ", period: 3},
+  {node: "ABCDEFG"},
+    { name: "PING[i]", wave: '345345',  data: "0 1 2 0 1 2"},
+    { name: "TIMER", wave: 'P.....', phase:0},
+    { name: "" , node: "ZYXWVUQ"},
   ],
-  config: {hscale:.5
+  config: {hscale:2
      },
   edge: [
      'A 0 ms',
      'B 20 ms',
      'C 40 ms',
      'D 60 ms',
-     'E 20(n) ms',
-     'F 20(n+1) ms',
-     'G 20(n+2) ms..........',
+     'E 80 ms',
+     'F 100 ms',
+     'G 120 ms...',
 	 'A-Z',
      'B-Y',
      'C-X',
@@ -24,4 +24,7 @@
      'F-U',
      'G-Q',
     ],
+  foot:{
+   	tick:0
+ },
 }

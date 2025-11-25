@@ -12,18 +12,11 @@
 const CAPTURE  = scripting.addModule("/ti/driverlib/CAPTURE", {}, false);
 const CAPTURE1 = CAPTURE.addInstance();
 const CAPTURE2 = CAPTURE.addInstance();
-const CAPTURE3 = CAPTURE.addInstance();
 const GPIO     = scripting.addModule("/ti/driverlib/GPIO", {}, false);
 const GPIO1    = GPIO.addInstance();
-const GPIO2    = GPIO.addInstance();
-const GPIO3    = GPIO.addInstance();
 const PWM      = scripting.addModule("/ti/driverlib/PWM", {}, false);
 const PWM1     = PWM.addInstance();
-const QEI      = scripting.addModule("/ti/driverlib/QEI", {}, false);
-const QEI1     = QEI.addInstance();
 const SYSCTL   = scripting.addModule("/ti/driverlib/SYSCTL");
-const TIMER    = scripting.addModule("/ti/driverlib/TIMER", {}, false);
-const TIMER1   = TIMER.addInstance();
 
 /**
  * Write custom configuration values to the imported modules.
@@ -84,20 +77,6 @@ CAPTURE2.ccp0PinConfig.$name                = "ti_driverlib_gpio_GPIOPinGeneric2
 CAPTURE2.peripheral.$assign                 = "TIMG7";
 CAPTURE2.peripheral.ccp0Pin.$assign         = "boosterpack.38";
 
-CAPTURE3.$name                                    = "ECHO_TIM";
-CAPTURE3.captureInputMode                         = "multi";
-CAPTURE3.ccIndexMulti                             = [0,1];
-CAPTURE3.multi_ch1_input_mode                     = "DL_TIMER_CC_IN_SEL_CCPX_PAIR";
-CAPTURE3.multi_countMode                          = "DL_TIMER_COUNT_MODE_UP";
-CAPTURE3.multi_cvae                               = "DL_TIMER_COUNT_AFTER_EN_ZERO";
-CAPTURE3.multi_countRep                           = "DL_TIMER_REPEAT_MODE_ENABLED";
-CAPTURE3.multi_ch_zero                            = 0;
-CAPTURE3.interrupts                               = ["CC1_UP"];
-CAPTURE3.multi_ch1_captEdgeDetection              = "DL_TIMER_CC_CCOND_TRIG_FALL";
-CAPTURE3.ccp0PinConfig.$name                      = "ti_driverlib_gpio_GPIOPinGeneric6";
-CAPTURE3.peripheral.$assign                       = "TIMG0";
-CAPTURE3.peripheral.ccp0Pin.$assignAllowConflicts = "boosterpack.32";
-
 GPIO1.$name                         = "RC_IN";
 GPIO1.associatedPins.create(2);
 GPIO1.associatedPins[0].direction   = "INPUT";
@@ -110,32 +89,6 @@ GPIO1.associatedPins[1].direction   = "INPUT";
 GPIO1.associatedPins[1].polarity    = "FALL";
 GPIO1.associatedPins[1].interruptEn = true;
 GPIO1.associatedPins[1].pin.$assign = "boosterpack.36";
-
-GPIO2.$name                                       = "PING";
-GPIO2.associatedPins.create(8);
-GPIO2.associatedPins[0].$name                     = "BUF_EN";
-GPIO2.associatedPins[0].pin.$assign               = "boosterpack.18";
-GPIO2.associatedPins[1].$name                     = "BUF_DIR";
-GPIO2.associatedPins[1].pin.$assign               = "boosterpack.19";
-GPIO2.associatedPins[2].$name                     = "MUX0_EN";
-GPIO2.associatedPins[2].pin.$assign               = "boosterpack.28";
-GPIO2.associatedPins[3].$name                     = "MUX1_EN";
-GPIO2.associatedPins[3].pin.$assign               = "boosterpack.29";
-GPIO2.associatedPins[4].$name                     = "MUX_SEL0";
-GPIO2.associatedPins[4].pin.$assign               = "boosterpack.25";
-GPIO2.associatedPins[5].$name                     = "MUX_SEL1";
-GPIO2.associatedPins[5].pin.$assign               = "boosterpack.26";
-GPIO2.associatedPins[6].$name                     = "MUX_SEL2";
-GPIO2.associatedPins[6].pin.$assign               = "boosterpack.27";
-GPIO2.associatedPins[7].$name                     = "PING_BUS";
-GPIO2.associatedPins[7].pin.$assignAllowConflicts = "boosterpack.32";
-
-GPIO3.$name                         = "QEI";
-GPIO3.associatedPins.create(2);
-GPIO3.associatedPins[0].$name       = "QEI1_A";
-GPIO3.associatedPins[0].pin.$assign = "boosterpack.14";
-GPIO3.associatedPins[1].$name       = "QEI1_B";
-GPIO3.associatedPins[1].pin.$assign = "boosterpack.12";
 
 PWM1.clockPrescale                      = 32;
 PWM1.timerCount                         = 20000;
@@ -167,22 +120,7 @@ PWM1.ccp1PinConfig.onlyInternalResistor = scripting.forceWrite(false);
 PWM1.ccp1PinConfig.passedPeripheralType = scripting.forceWrite("Digital");
 PWM1.ccp1PinConfig.$name                = "ti_driverlib_gpio_GPIOPinGeneric5";
 
-QEI1.$name                      = "QEI_0";
-QEI1.peripheral.$assign         = "TIMG8";
-QEI1.peripheral.ccp0Pin.$assign = "boosterpack.13";
-QEI1.peripheral.ccp1Pin.$assign = "boosterpack.11";
-QEI1.ccp0PinConfig.$name        = "ti_driverlib_gpio_GPIOPinGeneric7";
-QEI1.ccp1PinConfig.$name        = "ti_driverlib_gpio_GPIOPinGeneric8";
-
 SYSCTL.MFCLKEn = true;
-
-TIMER1.timerStartTimer    = true;
-TIMER1.timerPeriod        = "20 ms";
-TIMER1.timerClkPrescale   = 32;
-TIMER1.$name              = "PING_SCHED_TIM";
-TIMER1.interrupts         = ["CC0_UP","LOAD","ZERO"];
-TIMER1.timerMode          = "PERIODIC_UP";
-TIMER1.peripheral.$assign = "TIMG6";
 
 /**
  * Pinmux solution for unlocked pins/peripherals. This ensures that minor changes to the automatic solver in a future
