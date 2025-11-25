@@ -16,6 +16,7 @@ ORDERED_OBJS += \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
 "./kyles_kirb-3_config.o" \
+<<<<<<< HEAD
 "../Debug copy/kyles_kirb-3.o" \
 "../Debug copy/startup_mspm0g350x_ticlang.o" \
 "./Debug copy/ti_msp_dl_config.o" \
@@ -26,6 +27,10 @@ ORDERED_OBJS += \
 "../targetConfigs/Debug/ti_msp_dl_config.o" \
 "../Debug copy/device_linker.cmd" \
 "../targetConfigs/Debug/device_linker.cmd" \
+=======
+"./Debug copy/ti_msp_dl_config.o" \
+"./targetConfigs/Debug/ti_msp_dl_config.o" \
+>>>>>>> f9bace0a35d27c580c34cdd5df5b963e5ddd66ee
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
