@@ -2,9 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-SHELL = cmd.exe
-
-CG_TOOL_ROOT := C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
+CG_TOOL_ROOT := /Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS
 
 GEN_OPTS__FLAG := @"./device.opt" 
 GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" 
@@ -16,29 +14,16 @@ ORDERED_OBJS += \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
 "./kyles_kirb-3_config.o" \
-<<<<<<< HEAD
-"../Debug copy/kyles_kirb-3.o" \
-"../Debug copy/startup_mspm0g350x_ticlang.o" \
-"./Debug copy/ti_msp_dl_config.o" \
-"../Debug copy/ti_msp_dl_config.o" \
-"../targetConfigs/Debug/kyles_kirb-3.o" \
-"../targetConfigs/Debug/startup_mspm0g350x_ticlang.o" \
-"./targetConfigs/Debug/ti_msp_dl_config.o" \
-"../targetConfigs/Debug/ti_msp_dl_config.o" \
-"../Debug copy/device_linker.cmd" \
-"../targetConfigs/Debug/device_linker.cmd" \
-=======
 "./Debug copy/ti_msp_dl_config.o" \
 "./targetConfigs/Debug/ti_msp_dl_config.o" \
->>>>>>> f9bace0a35d27c580c34cdd5df5b963e5ddd66ee
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
 
 -include ../makefile.init
 
-RM := DEL /F
-RMDIR := RMDIR /S/Q
+RM := rm -rf
+RMDIR := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
@@ -151,22 +136,22 @@ EXE_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+all: $(OBJS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "kyles_final_proj.out"
 
 # Tool invocations
-kyles_final_proj.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+kyles_final_proj.out: $(OBJS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"C:/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
+	"/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"/Users/elibell/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"/Users/elibell/Documents/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"/Users/elibell/Documents/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" "Debug copy\ti_msp_dl_config.o" "targetConfigs\Debug\ti_msp_dl_config.o" 
-	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" "Debug copy\ti_msp_dl_config.d" "targetConfigs\Debug\ti_msp_dl_config.d" 
+	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" "Debug copy/ti_msp_dl_config.o" "targetConfigs/Debug/ti_msp_dl_config.o" 
+	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" "Debug copy/ti_msp_dl_config.d" "targetConfigs/Debug/ti_msp_dl_config.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

@@ -2,8 +2,6 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-SHELL = cmd.exe
-
 # Add inputs and outputs from these tool invocations to the build variables 
 SYSCFG_SRCS += \
 ../kyles_kirb-3.syscfg 
@@ -13,7 +11,7 @@ C_SRCS += \
 ../clock.c \
 ../kyles_kirb-3.c \
 ./ti_msp_dl_config.c \
-C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
+/Users/elibell/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c \
 ../kyles_kirb-3_config.c 
 
 GEN_CMDS += \
@@ -79,7 +77,7 @@ C_SRCS__QUOTED += \
 "../clock.c" \
 "../kyles_kirb-3.c" \
 "./ti_msp_dl_config.c" \
-"C:/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
+"/Users/elibell/ti/mspm0_sdk_2_08_00_03/source/ti/devices/msp/m0p/startup_system_files/ticlang/startup_mspm0g350x_ticlang.c" \
 "../kyles_kirb-3_config.c" 
 
 SYSCFG_SRCS__QUOTED += \
