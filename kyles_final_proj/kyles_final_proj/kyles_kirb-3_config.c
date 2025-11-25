@@ -22,7 +22,6 @@
 void config_init(void)
 void power_init(void);
 void GPIO_init(void);
-void clock_init(void);
 void PWM_init(void);
 void RC_timer0_init(void);
 void RC_timer1_init(void);
@@ -32,45 +31,6 @@ void RC_timer1_init(void);
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 
-
-// GPIO_init() constants
-//------------------------------------------------------------------------------
-#define GPIO_MOTOR_PWM_C0_IOMUX                                  (IOMUX_PINCM15)
-#define GPIO_MOTOR_PWM_C0_IOMUX_FUNC                 IOMUX_PINCM15_PF_TIMA1_CCP0
-#define GPIO_MOTOR_PWM_C0_PIN                                       (0x00000004)
-
-#define GPIO_MOTOR_PWM_C1_IOMUX                                  (IOMUX_PINCM16)
-#define GPIO_MOTOR_PWM_C1_IOMUX_FUNC                 IOMUX_PINCM16_PF_TIMA1_CCP1
-#define GPIO_MOTOR_PWM_C1_PIN                                       (0x00000008)
-
-#define GPIO_RC_TIM0_C0_IOMUX                                    (IOMUX_PINCM19)
-#define GPIO_RC_TIM0_C0_IOMUX_FUNC                   IOMUX_PINCM19_PF_TIMA0_CCP0
-
-#define GPIO_RC_TIM0_C2_IOMUX                                    (IOMUX_PINCM37)
-#define GPIO_RC_TIM0_C2_IOMUX_FUNC                   IOMUX_PINCM37_PF_TIMA0_CCP2
-
-#define GPIO_RC_TIM0_C3_IOMUX                                    (IOMUX_PINCM55)
-#define GPIO_RC_TIM0_C3_IOMUX_FUNC                   IOMUX_PINCM55_PF_TIMA0_CCP3
-
-#define GPIO_RC_TIM1_C0_IOMUX                                     (IOMUX_PINCM3)
-#define GPIO_RC_TIM1_C0_IOMUX_FUNC                    IOMUX_PINCM3_PF_TIMG7_CCP0
-
-#define RC_IN_CH5_IOMUX                                          (IOMUX_PINCM30)
-#define RC_IN_CH6_IOMUX                                          (IOMUX_PINCM48)
-
-#define RC_IN_PORT                                                       (GPIOB)
-
-#define RC_IN_CH5_PIN                                               (0x00002000)
-#define RC_IN_CH6_PIN                                               (0x00100000)
-//------------------------------------------------------------------------------
-#define GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE                 ((uint32_t)0x00000008U) 
-
-#define DL_SYSCTL_MCLK_DIVIDER_DISABLE                                     (0x0)
-
-
-
-
-//------------------------------------------------------------------------------
 // testing
 /*
 
@@ -97,7 +57,6 @@ void config_init(void)
 {
     power_init();
     GPIO_init();
-    clock_init();
     PWM_init();
     RC_timer0_init();
     RC_timer1_init();
@@ -119,17 +78,20 @@ void power_init(void)
                             GPIO_RSTCTL_RESETSTKYCLR_CLR |
                             GPIO_RSTCTL_RESETASSERT_ASSERT);
 
-    //   DL_TimerA_reset(MOTOR_PWM_INST);
+    //DL_TimerA_reset(MOTOR_PWM_INST);
+    //Resets the PWM instance of Timer A
     MOTOR_PWM_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
 
-    //    DL_TimerA_reset(RC_TIM0_INST);
+    //DL_TimerA_reset(RC_TIM0_INST);
+    //Resets the TIM0 instance of Timer A
     RC_TIM0_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
 
     //   DL_TimerG_reset(RC_TIM1_INST);
+    //Resets the TIM1 instance of Timer G
     RC_TIM1_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
                                     GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
                                     GPTIMER_RSTCTL_RESETASSERT_ASSERT);
@@ -139,6 +101,7 @@ void power_init(void)
     GPIOB->GPRCM.PWREN = (GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE);
 
     //DL_TimerA_enablePower(MOTOR_PWM_INST);
+    //
     MOTOR_PWM_INST->GPRCM.PWREN = (GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE);
 
     // DL_TimerA_enablePower(RC_TIM0_INST);
@@ -164,11 +127,11 @@ void GPIO_init(void)
   //Enable output on pin PB3
   GPIO_MOTOR_PWM_C1_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C1_PIN;
 
-  //Configure RC input (TIMA0_C0) on pin PA8 
+  //Configure RC input (TIMA0_C0N) on pin PA8 
   IOMUX->SECCFG.PINCM[GPIO_RC_TIM0_C0_IOMUX] =
       GPIO_RC_TIM0_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
 
-  //Configure RC input (TIM0_C2) on pin PA15 
+  //Configure RC input (TIM0_C2N) on pin PA15 
   IOMUX->SECCFG.PINCM[GPIO_RC_TIM0_C2_IOMUX] =
       GPIO_RC_TIM0_C2_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
 
@@ -179,36 +142,6 @@ void GPIO_init(void)
   //Configure RC input (TIMA1_C0) on pin PA28
   IOMUX->SECCFG.PINCM[GPIO_RC_TIM1_C0_IOMUX] =
       GPIO_RC_TIM1_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
-
-  //Configure pin PB13 as a GPIO input
-  /* GPIO functionality is always a pin function of 0x00000001 */
-  IOMUX->SECCFG.PINCM[RC_IN_CH5_IOMUX] =
-      IOMUX_PINCM_INENA_ENABLE | IOMUX_PINCM_PC_CONNECTED |
-      ((uint32_t) 0x00000001) | (uint32_t) IOMUX_PINCM_INV_DISABLE |
-      (uint32_t) (IOMUX_PINCM_PIPU_DISABLE | IOMUX_PINCM_PIPD_DISABLE) | (uint32_t) IOMUX_PINCM_HYSTEN_DISABLE |
-      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WCOMP_MASK);
-  IOMUX->SECCFG.PINCM[RC_IN_CH5_IOMUX] |=
-      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WUEN_MASK);
-
-  //Configure pin PB20 as a GPIO input
-  /* GPIO functionality is always a pin function of 0x00000001 */
-  IOMUX->SECCFG.PINCM[RC_IN_CH6_IOMUX] =
-      IOMUX_PINCM_INENA_ENABLE | IOMUX_PINCM_PC_CONNECTED |
-      ((uint32_t) 0x00000001) | (uint32_t) IOMUX_PINCM_INV_DISABLE |
-      (uint32_t) (IOMUX_PINCM_PIPU_DISABLE | IOMUX_PINCM_PIPD_DISABLE) | (uint32_t) IOMUX_PINCM_HYSTEN_DISABLE |
-      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WCOMP_MASK);
-  IOMUX->SECCFG.PINCM[RC_IN_CH6_IOMUX] |=
-      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WUEN_MASK);
-    
-  //Sets ploarity for lower bits
-  RC_IN_PORT->POLARITY15_0 |= GPIO_POLARITY15_0_DIO13_FALL;
-  //Sets polarity for upper bits
-  RC_IN_PORT->POLARITY31_16 |= GPIO_POLARITY31_16_DIO20_FALL;
-  //Clears interrupts
-  RC_IN_PORT->CPU_INT.ICLR |= (RC_IN_CH5_PIN | RC_IN_CH6_PIN);
-  //Enables interrupts
-  RC_IN_PORT->CPU_INT.IMASK |= (RC_IN_CH5_PIN |RC_IN_CH6_PIN);
-
 
 }
 
@@ -222,7 +155,7 @@ void clock_init(void)
   //Sets the system oscillator to 32MHz
   update_Reg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
         SYSCTL_SYSOSCCFG_FREQ_MASK);
-  //Enables the medium frequency clock (4Mhz)
+  //Enables the medium frequency clock (4MHz)
   SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
   //Sets up ultra low power clock (not divided)
   update_Reg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
@@ -313,6 +246,11 @@ void PWM_init(void)
     5. Configure CCP as an output for the CC block by setting respective bit in the CCPD registers. For instance, if
         TIMx Channel 0 is an output, set CCPD.C0CCP0 = 1.
     */
+  IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
+
+  GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
+}  
+
 
     /*
     6. In TIMx.CCACT_xy[0/1], set the CCP output action settings for compare events, zero events, load events,
