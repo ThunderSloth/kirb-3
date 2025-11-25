@@ -31,6 +31,45 @@ void RC_timer1_init(void);
 // Define symbolic constants used by the program
 //-----------------------------------------------------------------------------
 
+
+// GPIO_init() constants
+//------------------------------------------------------------------------------
+#define GPIO_MOTOR_PWM_C0_IOMUX                                  (IOMUX_PINCM15)
+#define GPIO_MOTOR_PWM_C0_IOMUX_FUNC                 IOMUX_PINCM15_PF_TIMA1_CCP0
+#define GPIO_MOTOR_PWM_C0_PIN                                       (0x00000004)
+
+#define GPIO_MOTOR_PWM_C1_IOMUX                                  (IOMUX_PINCM16)
+#define GPIO_MOTOR_PWM_C1_IOMUX_FUNC                 IOMUX_PINCM16_PF_TIMA1_CCP1
+#define GPIO_MOTOR_PWM_C1_PIN                                       (0x00000008)
+
+#define GPIO_RC_TIM0_C0_IOMUX                                    (IOMUX_PINCM19)
+#define GPIO_RC_TIM0_C0_IOMUX_FUNC                   IOMUX_PINCM19_PF_TIMA0_CCP0
+
+#define GPIO_RC_TIM0_C2_IOMUX                                    (IOMUX_PINCM37)
+#define GPIO_RC_TIM0_C2_IOMUX_FUNC                   IOMUX_PINCM37_PF_TIMA0_CCP2
+
+#define GPIO_RC_TIM0_C3_IOMUX                                    (IOMUX_PINCM55)
+#define GPIO_RC_TIM0_C3_IOMUX_FUNC                   IOMUX_PINCM55_PF_TIMA0_CCP3
+
+#define GPIO_RC_TIM1_C0_IOMUX                                     (IOMUX_PINCM3)
+#define GPIO_RC_TIM1_C0_IOMUX_FUNC                    IOMUX_PINCM3_PF_TIMG7_CCP0
+
+#define RC_IN_CH5_IOMUX                                          (IOMUX_PINCM30)
+#define RC_IN_CH6_IOMUX                                          (IOMUX_PINCM48)
+
+#define RC_IN_PORT                                                       (GPIOB)
+
+#define RC_IN_CH5_PIN                                               (0x00002000)
+#define RC_IN_CH6_PIN                                               (0x00100000)
+//------------------------------------------------------------------------------
+#define GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE                 ((uint32_t)0x00000008U) 
+
+#define DL_SYSCTL_MCLK_DIVIDER_DISABLE                                     (0x0)
+
+
+
+
+//------------------------------------------------------------------------------
 // testing
 /*
 
@@ -58,6 +97,7 @@ void config_init(void)
     power_init();
     GPIO_init();
     PWM_init();
+    clock_init();
     RC_timer0_init();
     RC_timer1_init();
 
@@ -142,6 +182,37 @@ void GPIO_init(void)
   //Configure RC input (TIMA1_C0) on pin PA28
   IOMUX->SECCFG.PINCM[GPIO_RC_TIM1_C0_IOMUX] =
       GPIO_RC_TIM1_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
+
+    //Configure pin PB13 as a GPIO input
+  /* GPIO functionality is always a pin function of 0x00000001 */
+  IOMUX->SECCFG.PINCM[RC_IN_CH5_IOMUX] =
+      IOMUX_PINCM_INENA_ENABLE | IOMUX_PINCM_PC_CONNECTED |
+      ((uint32_t) 0x00000001) | (uint32_t) IOMUX_PINCM_INV_DISABLE |
+      (uint32_t) (IOMUX_PINCM_PIPU_DISABLE | IOMUX_PINCM_PIPD_DISABLE) | (uint32_t) IOMUX_PINCM_HYSTEN_DISABLE |
+      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WCOMP_MASK);
+  IOMUX->SECCFG.PINCM[RC_IN_CH5_IOMUX] |=
+      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WUEN_MASK);
+
+  //Configure pin PB20 as a GPIO input
+  /* GPIO functionality is always a pin function of 0x00000001 */
+  IOMUX->SECCFG.PINCM[RC_IN_CH6_IOMUX] =
+      IOMUX_PINCM_INENA_ENABLE | IOMUX_PINCM_PC_CONNECTED |
+      ((uint32_t) 0x00000001) | (uint32_t) IOMUX_PINCM_INV_DISABLE |
+      (uint32_t) (IOMUX_PINCM_PIPU_DISABLE | IOMUX_PINCM_PIPD_DISABLE) | (uint32_t) IOMUX_PINCM_HYSTEN_DISABLE |
+      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WCOMP_MASK);
+  IOMUX->SECCFG.PINCM[RC_IN_CH6_IOMUX] |=
+      ((uint32_t) IOMUX_PINCM_WUEN_DISABLE & IOMUX_PINCM_WUEN_MASK);
+    
+  //Sets ploarity for lower bits
+  RC_IN_PORT->POLARITY15_0 |= GPIO_POLARITY15_0_DIO13_FALL;
+  //Sets polarity for upper bits
+  RC_IN_PORT->POLARITY31_16 |= GPIO_POLARITY31_16_DIO20_FALL;
+  //Clears interrupts
+  RC_IN_PORT->CPU_INT.ICLR |= (RC_IN_CH5_PIN | RC_IN_CH6_PIN);
+  //Enables interrupts
+  RC_IN_PORT->CPU_INT.IMASK |= (RC_IN_CH5_PIN |RC_IN_CH6_PIN);
+
+
 
 }
 
