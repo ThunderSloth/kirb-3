@@ -20,12 +20,16 @@
 \usepackage{tabularx}     % auto-wrapping column type X
 \sisetup{detect-all, per-mode=symbol} % nicer units
 \usepackage{enumitem}
+\usepackage{float}
 
 % Keep hyperref LAST
 \usepackage{hyperref}
 
 % ragged-right X column that still allows \\ at row ends
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+
+\graphicspath{{../fig/}}
 
 
 % Page Layout
@@ -39,115 +43,107 @@
 }
 
 \begin{document}
-\begin{center}
-    {\LARGE \textbf{Ultrasonic Sensor Timing Sequence}}\\[0.5em]
-\end{center}
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.95\linewidth]{ping_timing_diagram.png}
-    \caption{\small PING))) Ultrasonic Sensor Timing Sequence (Single-Sensor Cycle).}
-    \label{fig:ping_timing}
+\subsubsection{Ultrasonic Hardware Overview}
+
+The ultrasonic sensors are arranged as a distributed array around the rover.
+Each sensor is powered from the 5~V rail and produces a 5~V digital echo pulse
+in response to a short trigger pulse. The overall electrical organization of
+the array is shown in \autoref{fig:ult-array-schematic}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ult_array}
+  \caption[Ultrasonic sensor array schematic]{
+    Schematic excerpt of the ultrasonic sensor array. Ten sensors are powered
+    from the 5~V rail and form a distributed ranging array for the KIRB-3
+    platform.}
+  \label{fig:ult-array-schematic}
 \end{figure}
 
-\small
+The trigger/echo interface of each ultrasonic module is a driven, bidirectional
+line, making it unsuitable for direct multi-sensor wiring or direct connection
+to 3.3~V MCU inputs. To implement a safe shared PING Bus, the design employs
+two stages:
 
-\noindent One full \SI{20}{ms} measurement cycle for a single \textbf{Parallax PING))) Ultrasonic Distance Sensor} via an \textbf{SN74LVC245A} bidirectional level shifter. The MCU issues a \SI{5}{\micro\second} trigger, then reconfigures the shared I/O to input to measure the echo pulse width (time-of-flight).
+\begin{itemize}
+  \item \textbf{An analog multiplexer} that connects exactly one sensor at a
+        time to the shared line (the \emph{PING Bus}), preventing
+        cross-driving between sensors.
+  \item \textbf{A bidirectional buffer with direction control} that allows the
+        MSPM0 to drive the trigger pulse, then switches to receive mode to
+        pass the sensor’s 5~V echo while level-protecting the 3.3~V domain.
+\end{itemize}
 
-\begingroup\scriptsize
-\vspace{4pt}
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{} l l Y @{}}
-\toprule
-\textbf{Signal} & \textbf{Name / Direction} & \textbf{Description} \\
-\midrule
-\textbf{DIR} & Buffer Direction &
-\textit{SN74LVC245A} direction control.\newline
-1 = MCU $\rightarrow$ Sensor (trigger phase).\newline
-0 = Sensor $\rightarrow$ MCU (echo phase).\\[3pt]
-\hline
-\textbf{PING[$i$]} & Sensor GPIO (Group) &
-Bidirectional MCU GPIO shared with ultrasonic sensor $i$.\newline
-Logical group encompassing IMASK, DOE, TRIG, and ECHO signals.\newline
-Manages the trigger, echo, and interrupt states for each sensor in the round-robin sequence.\\[3pt]
-\hline
-\textbf{IMASK} & Interrupt Mask &
-Per-pin interrupt enable for the PING line.\newline
-1 = Interrupt enabled (ECHO edge capture active).\newline
-0 = Interrupt disabled (no capture events forwarded to NVIC).\\[3pt]
-\hline
-\textbf{DOE} & Data Output Enable &
-MCU GPIO output-enable control for the PING line.\newline
-Input: idle and echo phases (interrupts disabled during idle).\newline
-Output: trigger phase.\\[3pt]
-\hline
-\textbf{TRIG} & Trigger Pulse &
-\SI{5}{\micro\second} rising-edge pulse driven by MCU to initiate ultrasonic burst from the sensor.\\[3pt]
-\hline
-\textbf{ECHO} & Echo Pulse &
-Return pulse width proportional to target distance.\newline
-Minimum: \SI{115}{\micro\second}\newline
-Maximum: \SI{18.5}{\milli\second}.\\[3pt]
-\hline
-\textbf{TIMER} & Capture / Compare &
-Timer capture/compare reference points (ZERO, CC0, CC1, LOAD) aligned with echo pulse duration measurement.\\
-\bottomrule
-\end{tabularx}
-\end{center}
-\endgroup
+This architecture does more than reduce pin count: it enables \emph{every}
+sensor to use the MSPM0's hardware capture unit to measure echo pulse width.
+Without multiplexing, the limited number of timer capture channels would
+restrict how many sensors could be measured using precise hardware timing.
 
-\noindent\textbf{Notes.}
-\begin{enumerate}
-  \item Timer in edge-aligned up-count mode (LOAD = period limit).
-  \item Preload GPIO output before asserting DOE to avoid transients.
-  \item Round-robin across sensors with \SI{20}{ms} spacing to avoid ultrasonic crosstalk.
-  \item SN74LVC245A provides \SI{5}{V} $\leftrightarrow$ \SI{3.3}{V} logic compatibility.
-\end{enumerate}
+The routing and level-conditioning circuitry is shown in
+\autoref{fig:ult-mux-schematic}.
 
-\newpage
-\begin{center}
-    {\LARGE \textbf{Multi-Sensor Schedule Cycle}}\\[0.5em]
-\end{center}
-
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.95\linewidth]{ping_round_robin_diagram.png}
-    \caption{\small Round-robin schedule for three ultrasonic sensors.}
-    \label{fig:ping_round_robin}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth]{ult_mux}
+  \caption[Ultrasonic routing and multiplexer schematic]{
+    Schematic excerpt of the ultrasonic routing subsystem. A multiplexer selects
+    one sensor onto the shared PING Bus, while the bidirectional buffer provides
+    direction control and level protection between the sensor array and the
+    MSPM0's 3.3~V domain.}
+  \label{fig:ult-mux-schematic}
 \end{figure}
 
-\small
-\noindent The system operates three ultrasonic sensors in a round-robin sequence to prevent acoustic interference between transducers. Each sensor is allocated a dedicated \SI{20}{ms} time slot encompassing its trigger, echo measurement, and a brief guard interval before the next sensor’s cycle begins. This ensures that no two sensors emit ultrasonic bursts simultaneously.
+To service all ten sensors over a single PING Bus, the firmware runs a simple
+round-robin scheduler over the sensor index \verb|sensor_idx|. On each period
+of the Ultrasonic Schedule Timer, it selects the next sensor, performs exactly
+one measurement on that channel, and then advances the index with wrap-around.
+The high-level behavior of this scheduler is shown in
+\autoref{fig:ping-round-robin}.
 
-\vspace{6pt}
-\begin{center}
-\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{ccc}
-\toprule
-\textbf{Slot} & \textbf{Time Window} & \textbf{Active Sensor} \\
-\midrule
-0 & $[\,\,\,\,\SI{0}{ms},\,\SI{20}{ms})$   & PING[0] \\
-1 & $[\,\SI{20}{ms},\,\SI{40}{ms})$  & PING[1] \\
-2 & $[\,\SI{40}{ms},\,\SI{60}{ms})$  & PING[2] \\
-\bottomrule
-\end{tabular}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.95\linewidth]{ping_round_robin_diagram}
+  \caption[Round-robin ultrasonic scheduling timing]{
+    Round-robin ultrasonic scheduling. Each period of the schedule timer selects
+    one sensor onto the PING Bus and triggers a single measurement, then
+    advances the active sensor index.}
+  \label{fig:ping-round-robin}
+\end{figure}
+\subsubsection{Single-Cycle Trigger and Echo Timing}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth]{ping_timing_diagram}
+  \caption[Single ultrasonic measurement timing]{
+    Timing of one ultrasonic measurement on the PING Bus. The schedule timer,
+    echo timer, buffer direction, and bus state progress through one complete
+    trigger/echo cycle for the selected sensor.}
+  \label{fig:ping-single-cycle}
+\end{figure}
 
-\vspace{3pt}
-\footnotesize
-Cycle repeats every \SI{60}{ms}, yielding an update rate of \SI{16.7}{Hz} per sensor.
-\end{center}
-\vspace{6pt}
-\noindent\textbf{Timing considerations.}
-As shown in the single-sensor timing diagram, each measurement cycle consists of a short trigger, a fixed holdoff interval, and an echo pulse lasting up to approximately \SI{18.5}{ms}. Including these intervals yields a total cycle time of about \SI{19.2}{ms}, so a \SI{20}{ms} slot provides a small but sufficient margin to accommodate overhead and ensure all echoes have dissipated before the next sensor begins.\\
-\\
-\noindent\textbf{Notes.}
-\begin{enumerate}
-  \item Only one sensor is active per slot; the remaining sensors stay configured as inputs with their internal pull-downs enabled to prevent bus contention and maintain a defined low idle state. 
-  \item The MCU cycles through sensors sequentially every \SI{20}{ms}.
-  \item This schedule avoids cross-interference while maintaining a \SI{50}{Hz} global timing base.
-  \item Additional sensors can be supported by proportionally extending the total cycle period.
-\end{enumerate}
+The key stages are: placing the PING Bus in a safe state, selecting the active
+sensor, issuing and ending the trigger pulse, arming the echo timer on the
+first edge, and capturing the pulse width on the falling edge.
 
+\subsubsection{Interrupt-Driven Control Flow}
+
+These timing events map directly to interrupt service routines (IRQs) on the
+schedule timer and echo timer. The flowchart in
+\autoref{fig:kirb-ult-flow} summarizes the firmware logic that executes one
+measurement per schedule period and corresponds directly to the timing shown in
+\autoref{fig:ping-single-cycle}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\linewidth]{kirb_ult_irq_flow.jpg}
+  \caption[Ultrasonic IRQ control flow]{
+    Firmware control flow for one ultrasonic measurement cycle, driven by
+    schedule timer interrupts and echo timer hardware events.}
+  \label{fig:kirb-ult-flow}
+\end{figure}
+
+Together, the timing diagram and flowchart describe how KIRB-3 multiplexes its
+ultrasonic sensors onto the shared PING Bus and uses MSPM0 timers to perform
+precise ranging across the sensor array.
 \newpage
 \begin{center}
     {\LARGE \textbf{Differential-Drive Odometry}}\\[0.5em]

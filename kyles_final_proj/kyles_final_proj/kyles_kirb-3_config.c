@@ -133,7 +133,6 @@ void PWM_init(void)
   GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
 }  
 
-}
 
 
 
@@ -143,19 +142,7 @@ void RC_timer0_init(void)
 }
 
 
-
-void RC_timer1_init(void)
-{
-
-}
-
-
-
-
-<<<<<<< HEAD
-
-
-RC_timer1_init()
+void RC_timer1_init()
 {
     
 }
@@ -164,5 +151,3 @@ RC_timer1_init()
 // git add .
 // git commit -m 'message here'
 // git push
-=======
->>>>>>> 04f1af6da53a3eaf02e1da99cedda0079a26c278
