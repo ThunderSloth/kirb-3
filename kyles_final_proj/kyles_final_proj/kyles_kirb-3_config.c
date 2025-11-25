@@ -180,43 +180,111 @@ void clock_init(void)
 
 }
 
-/*
-1. In the TIMx.CTRCTL register, set the desired counter control settings for:
-    a. Up-counting (CM = 2) or down-counting mode (CM = 0) and counter value after enable (CVAE) (see as
-        described in Section 27.2.2)
-    b. Zero (CZC), advance (CAC), and load control (CLC) to specify what condition controls zeroing,
-        advancing, or loading the counter
-    c. Repeat or one-shot mode (REPEAT)
+  //IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
 
-2. Set the TIMx.LOAD value to configure the PWM period.
+  //GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
 
-3. Set the TIMx.CC_xy[0/1] value to configure the duty cycle.
-
-4. Set TIMx.CCCTL_xy[0/1].COC = 1 for compare mode.
-
-5. Configure CCP as an output for the CC block by setting respective bit in the CCPD registers. For instance, if
-TIMx Channel 0 is an output, set CCPD.C0CCP0 = 1.
-
-6. In TIMx.CCACT_xy[0/1], set the CCP output action settings for compare events, zero events, load events,
-software force action, or fault events (TIMA only).
-
-7. In TIMx.OCTL_xy[0/1], set CCPO = 0 to select the signal generator output.
-
-8. Enable the corresponding CCP output by setting ODIS.C0CCPn to 1 for the corresponding counter n.
-
-9. Configure polarity of the signal using the CCPOINV bit, and configure CCPIV to specify the CCP output state
-while disabled.
-
-10. Enable the counter by setting TIMx.CTRCTL.EN = 1.
-*/
 void PWM_init(void)
 {
+  clock_delay(24);
+
+  TIMA0->CLKSEL = (GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE | 
+                   GPTIMER_CLKSEL_MFCLK_SEL_DISABLE |  
+                   GPTIMER_CLKSEL_LFCLK_SEL_DISABLE);
+
+  TIMA0->CLKDIV = GPTIMER_CLKDIV_RATIO_DIV_BY_8;
+
+  //Set the pre-scale count value that divides selected clock by PCNT+1
+  // TimerClock = BusCock / (DIVIDER * (PRESCALER))
+  // 200,000 Hz = 40,000,000 Hz / (8 * (24 + 1))
+  TIMA0->COMMONREGS.CPS = GPTIMER_CPS_PCNT_MASK & 0x18;
+
+  // Set C3 action for compare 
+  // On Zero, set output HIGH; On Compares up, set output LOW
+  TIMA0->COUNTERREGS.CCACT_23[1] = (GPTIMER_CCACT_23_FENACT_DISABLED | 
+        GPTIMER_CCACT_23_CC2UACT_DISABLED | GPTIMER_CCACT_23_CC2DACT_DISABLED |
+        GPTIMER_CCACT_23_CUACT_CCP_LOW | GPTIMER_CCACT_23_CDACT_DISABLED | 
+        GPTIMER_CCACT_23_LACT_DISABLED | GPTIMER_CCACT_23_ZACT_CCP_HIGH);
+
+  // Set timer reload value
+  TIMA0->COUNTERREGS.LOAD = GPTIMER_LOAD_LD_MASK & (load_value - 1);
+
+  // Set timer compare value
+  TIMA0->COUNTERREGS.CC_23[1] = GPTIMER_CC_23_CCVAL_MASK & compare_value;
+
+  // Set compare control for PWM func with output initially low
+  TIMA0->COUNTERREGS.OCTL_23[1] = (GPTIMER_OCTL_23_CCPIV_LOW | 
+                GPTIMER_OCTL_23_CCPOINV_NOINV | GPTIMER_OCTL_23_CCPO_FUNCVAL);
+  //
+  TIMA0->COUNTERREGS.CCCTL_23[1] = GPTIMER_CCCTL_23_CCUPD_IMMEDIATELY;
+
+
+  // When enabled load 0, set timer to count up
+  TIMA0->COUNTERREGS.CTRCTL = GPTIMER_CTRCTL_CVAE_ZEROVAL | 
+                 GPTIMER_CTRCTL_REPEAT_REPEAT_1 | GPTIMER_CTRCTL_CM_UP;
+
+  TIMA0->COMMONREGS.CCLKCTL = GPTIMER_CCLKCTL_CLKEN_ENABLED;
+
+  // No interrupt is required
+  TIMA0->CPU_INT.IMASK = GPTIMER_CPU_INT_IMASK_L_CLR;
+
+  // Set TIMA0_C3 as output
+  TIMA0->COMMONREGS.CCPD =(GPTIMER_CCPD_C0CCP3_OUTPUT | 
+         GPTIMER_CCPD_C0CCP2_INPUT | GPTIMER_CCPD_C0CCP1_INPUT | 
+         GPTIMER_CCPD_C0CCP0_INPUT);;
+    /*
+    1. In the TIMx.CTRCTL register, set the desired counter control settings for:
+        a. Up-counting (CM = 2) or down-counting mode (CM = 0) and counter value after enable (CVAE) (see as
+            described in Section 27.2.2)
+        b. Zero (CZC), advance (CAC), and load control (CLC) to specify what condition controls zeroing,
+            advancing, or loading the counter
+        c. Repeat or one-shot mode (REPEAT)
+    */
+    MOTOR_PWM_INST->COUNTERREGS.CTRCTL = GPTIMER_CTRCTL_CVAE_ZEROVAL | 
+                 GPTIMER_CTRCTL_REPEAT_REPEAT_1 | GPTIMER_CTRCTL_CM_UP;
+
+    DL_TimerA_setCounterControl(DL_TIMER_CZC_CCCTL0_ZCOND,DL_TIMER_CAC_CCCTL0_ACOND,DL_TIMER_CLC_CCCTL0_LCOND);
+  DL_Common_updateReg(&gptimer->
+  
+    MOTOR_PWM_INST->COUNTERREGS.CTRCTL,
+        ((uint32_t) zeroCtl | (uint32_t) advCtl | (uint32_t) loadCtl),
+        (GPTIMER_CTRCTL_CZC_MASK | GPTIMER_CTRCTL_CAC_MASK |
+            GPTIMER_CTRCTL_CLC_MASK));
+    // 2. Set the TIMx.LOAD value to configure the PWM period.
+
+    // 3. Set the TIMx.CC_xy[0/1] value to configure the duty cycle.
+
+    // 4. Set TIMx.CCCTL_xy[0/1].COC = 1 for compare mode.
+
+    /*
+    5. Configure CCP as an output for the CC block by setting respective bit in the CCPD registers. For instance, if
+        TIMx Channel 0 is an output, set CCPD.C0CCP0 = 1.
+    */
   IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
 
   GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
 }  
 
 
+    /*
+    6. In TIMx.CCACT_xy[0/1], set the CCP output action settings for compare events, zero events, load events,
+        software force action, or fault events (TIMA only).
+    */
+    MOTOR_PWM_INST->COUNTERREGS.CCACT_01[0] = (GPTIMER_CCACT_01_FENACT_DISABLED | 
+        GPTIMER_CCACT_01_CC2UACT_DISABLED | GPTIMER_CCACT_01_CC2DACT_DISABLED |
+        GPTIMER_CCACT_01_CUACT_CCP_LOW | GPTIMER_CCACT_01_CDACT_DISABLED | 
+        GPTIMER_CCACT_01_LACT_DISABLED | GPTIMER_CCACT_01_ZACT_CCP_HIGH);
+
+    // 7. In TIMx.OCTL_xy[0/1], set CCPO = 0 to select the signal generator output.
+
+    // 8. Enable the corresponding CCP output by setting ODIS.C0CCPn to 1 for the corresponding counter n.
+
+    /* 
+    9. Configure polarity of the signal using the CCPOINV bit, and configure CCPIV to specify the CCP output state
+        while disabled.
+    */
+
+    // 10. Enable the counter by setting TIMx.CTRCTL.EN = 1.
 
 /*
  * Timer clock configuration to be sourced by BUSCLK /  (32000000 Hz)
@@ -236,18 +304,23 @@ static const DL_TimerA_ClockConfig gRC_TIM0ClockConfig = {
 
 void RC_timer0_init(void)
 {
-    DL_TimerA_setClockConfig(RC_TIM0_INST,
-        (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
+    /*
+    DL_TimerA_setClockConfig(RC_TIM0_INST, (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
 
-    void DL_Timer_setClockConfig(
-    GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+    void DL_Timer_setClockConfig(GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+    {
+        gptimer->CLKSEL = (uint32_t)(config->clockSel);
 
-    gptimer->CLKSEL = (uint32_t)(config->clockSel);
+        gptimer->CLKDIV = (uint32_t)(config->divideRatio);
 
-    gptimer->CLKDIV = (uint32_t)(config->divideRatio);
+        gptimer->COMMONREGS.CPS = (config->prescale);
+    }
+    */
+    TIMA0->CLKSEL = (uint32_t)(GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE);
 
-    gptimer->COMMONREGS.CPS = (config->prescale);
+    TIMA0->CLKDIV = (uint32_t)(GPTIMER_CLKDIV_RATIO_DIV_BY_1);
 
+    TIMA0->COMMONREGS.CPS = (31U);
 
     DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
 
@@ -322,29 +395,6 @@ void RC_timer1_init(void)
 
 
 
-typedef struct {
-    /* Selects timer module clock source DL_TIMER_CLOCK*/
-    DL_TIMER_CLOCK clockSel;
-    /* Selects the timer module clock divide ratio DL_TIMER_CLOCK_DIVIDE */
-    DL_TIMER_CLOCK_DIVIDE divideRatio;
-    /* Selects the timer module clock prescaler. Valid range 0-255 */
-    uint8_t prescale;
-} DL_Timer_ClockConfig;
-
-typedef enum {
-    /*! Selects BUSCLK as clock source */
-    DL_TIMER_CLOCK_BUSCLK = GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE,
-    /*! Selects 2X BUSCLK as clock source */
-    DL_TIMER_CLOCK_2X_BUSCLK = GPTIMER_CLKSEL_BUS2XCLK_SEL_ENABLE,
-    /*! Selects MFCLK as clock source */
-    DL_TIMER_CLOCK_MFCLK = GPTIMER_CLKSEL_MFCLK_SEL_ENABLE,
-    /*! Selects LFCLK as clock source */
-    DL_TIMER_CLOCK_LFCLK = GPTIMER_CLKSEL_LFCLK_SEL_ENABLE,
-    /*! Disables selected clock source */
-    DL_TIMER_CLOCK_DISABLE = GPTIMER_CLKSEL_LFCLK_SEL_DISABLE,
-} DL_TIMER_CLOCK;
-
-
 
 // git pull
 // git add .
@@ -361,4 +411,3 @@ typedef enum {
     temp_reg  = temp_reg & ~mask;
     *reg = temp_reg | (value & mask);
 }
-
