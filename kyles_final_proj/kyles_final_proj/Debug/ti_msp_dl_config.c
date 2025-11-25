@@ -227,6 +227,16 @@ SYSCONFIG_WEAK void SYSCFG_DL_RC_TIM0_init(void) {
     DL_TimerA_setClockConfig(RC_TIM0_INST,
         (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
 
+    void DL_Timer_setClockConfig(
+    GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+    {
+        gptimer->CLKSEL = (uint32_t)(config->clockSel);
+
+        gptimer->CLKDIV = (uint32_t)(config->divideRatio);
+
+        gptimer->COMMONREGS.CPS = (config->prescale);
+    }
+
     DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
 
     DL_TimerA_setCounterMode(RC_TIM0_INST,DL_TIMER_COUNT_MODE_UP);

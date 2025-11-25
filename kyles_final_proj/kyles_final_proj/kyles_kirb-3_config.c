@@ -150,8 +150,35 @@ void clock_init(void)
 
 }
 
+/*
+1. In the TIMx.CTRCTL register, set the desired counter control settings for:
+    a. Up-counting (CM = 2) or down-counting mode (CM = 0) and counter value after enable (CVAE) (see as
+        described in Section 27.2.2)
+    b. Zero (CZC), advance (CAC), and load control (CLC) to specify what condition controls zeroing,
+        advancing, or loading the counter
+    c. Repeat or one-shot mode (REPEAT)
 
+2. Set the TIMx.LOAD value to configure the PWM period.
 
+3. Set the TIMx.CC_xy[0/1] value to configure the duty cycle.
+
+4. Set TIMx.CCCTL_xy[0/1].COC = 1 for compare mode.
+
+5. Configure CCP as an output for the CC block by setting respective bit in the CCPD registers. For instance, if
+TIMx Channel 0 is an output, set CCPD.C0CCP0 = 1.
+
+6. In TIMx.CCACT_xy[0/1], set the CCP output action settings for compare events, zero events, load events,
+software force action, or fault events (TIMA only).
+
+7. In TIMx.OCTL_xy[0/1], set CCPO = 0 to select the signal generator output.
+
+8. Enable the corresponding CCP output by setting ODIS.C0CCPn to 1 for the corresponding counter n.
+
+9. Configure polarity of the signal using the CCPOINV bit, and configure CCPIV to specify the CCP output state
+while disabled.
+
+10. Enable the counter by setting TIMx.CTRCTL.EN = 1.
+*/
 void PWM_init(void)
 {
   IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
@@ -161,10 +188,87 @@ void PWM_init(void)
 
 
 
+/*
+ * Timer clock configuration to be sourced by BUSCLK /  (32000000 Hz)
+ * timerClkFreq = (timerClkSrc / (timerClkDivRatio * (timerClkPrescale + 1)))
+ *   1000000 Hz = 32000000 Hz / (1 * (31 + 1))
+ */
+static const DL_TimerA_ClockConfig gRC_TIM0ClockConfig = {
+    .clockSel    = DL_TIMER_CLOCK_BUSCLK,
+    .divideRatio = DL_TIMER_CLOCK_DIVIDE_1,
+    .prescale = 31U
+};
+
+/*
+ * Timer load value (where the counter starts from) is calculated as (timerPeriod * timerClockFreq) - 1
+ * RC_TIM0_INST_LOAD_VALUE = (65ms * 1000000 Hz) - 1
+ */
 
 void RC_timer0_init(void)
 {
+    DL_TimerA_setClockConfig(RC_TIM0_INST,
+        (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
 
+    void DL_Timer_setClockConfig(
+    GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+
+    gptimer->CLKSEL = (uint32_t)(config->clockSel);
+
+    gptimer->CLKDIV = (uint32_t)(config->divideRatio);
+
+    gptimer->COMMONREGS.CPS = (config->prescale);
+
+
+    DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
+
+    DL_TimerA_setCounterMode(RC_TIM0_INST,DL_TIMER_COUNT_MODE_UP);
+
+    DL_TimerA_setCounterRepeatMode(RC_TIM0_INST,DL_TIMER_REPEAT_MODE_ENABLED);
+
+    DL_TimerA_setCounterValueAfterEnable(RC_TIM0_INST,DL_TIMER_COUNT_AFTER_EN_ZERO);
+
+    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
+    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_TRIG_RISE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_RISE),
+    DL_TIMER_CC_0_INDEX);
+
+    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_0_INDEX);
+
+    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
+    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
+    DL_TIMER_CC_1_INDEX);
+
+    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX_PAIR, DL_TIMER_CC_1_INDEX);
+
+    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
+    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
+    DL_TIMER_CC_2_INDEX);
+
+    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_2_INDEX);
+
+    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
+    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
+    DL_TIMER_CC_3_INDEX);
+
+    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_3_INDEX);
+
+
+    DL_TimerA_setCounterControl(RC_TIM0_INST,
+        DL_TIMER_CZC_CCCTL0_ZCOND,
+        DL_TIMER_CAC_CCCTL0_ACOND,
+        DL_TIMER_CLC_CCCTL0_LCOND
+    );
+
+    DL_TimerA_startCounter(RC_TIM0_INST);
+
+    DL_TimerA_enableInterrupt(RC_TIM0_INST , DL_TIMERA_INTERRUPT_CC1_UP_EVENT |
+		DL_TIMERA_INTERRUPT_CC2_UP_EVENT |
+		DL_TIMERA_INTERRUPT_CC3_UP_EVENT);
+
+    DL_TimerA_enableClock(RC_TIM0_INST);
 }
 
 
