@@ -22,6 +22,7 @@
 void config_init(void)
 void power_init(void);
 void GPIO_init(void);
+void clock_init(void);
 void PWM_init(void);
 void RC_timer0_init(void);
 void RC_timer1_init(void);
@@ -70,6 +71,19 @@ void RC_timer1_init(void);
 
 
 //------------------------------------------------------------------------------
+
+
+
+
+
+//RC_timer1_init constants
+//-----------------------------------------------------------------------------
+#define RC_TIM1_INST                                                     (TIMG7)
+#define TIMER_CLOCK_BUSCLK                               ((uint32_t)0x00000008U)
+#define TIMER_CLOCK_DIVIDE_1                             ((uint32_t)0x00000000U)
+#define TIM1_PRESCALE                                                      (31U)
+//-----------------------------------------------------------------------------
+
 // testing
 /*
 
@@ -224,12 +238,12 @@ void clock_init(void)
   //Sets BOR threshold at minimum level (does not activate)
   SYSCTL->SOCLOCK.BORTHRESHOLD = (uint32_t) SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
   //Sets the system oscillator to 32MHz
-  update_Reg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
+  updateReg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
         SYSCTL_SYSOSCCFG_FREQ_MASK);
   //Enables the medium frequency clock (4MHz)
   SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
   //Sets up ultra low power clock (not divided)
-  update_Reg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
+  updateReg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
         SYSCTL_MCLKCFG_UDIV_MASK);
   //Disable main clock divider 
   updateReg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) DL_SYSCTL_MCLK_DIVIDER_DISABLE,
@@ -435,6 +449,11 @@ void RC_timer0_init(void)
 
 void RC_timer1_init(void)
 {
+  RC_TIM1_INST->CLKSEL = (uint32_t)(TIMER_CLOCK_BUSCLK);
+
+  RC_TIM1_INST->CLKDIV = (uint32_t)(DL_TIMER_CLOCK_DIVIDE_1);
+
+  RC_TIM1_INST->COMMONREGS.CPS = (TIM1_PRESCALE);    
 
 }
 
@@ -453,7 +472,9 @@ void RC_timer1_init(void)
 // git commit -m 'message here'
 // git push
 
- void update_Reg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
+
+//Writes value to specified register - retaining bits unaffected by mask
+ void updateReg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
 {
     uint32_t temp_reg;
 
