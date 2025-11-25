@@ -16,6 +16,16 @@ ORDERED_OBJS += \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
 "./kyles_kirb-3_config.o" \
+"../Debug copy/kyles_kirb-3.o" \
+"../Debug copy/startup_mspm0g350x_ticlang.o" \
+"./Debug copy/ti_msp_dl_config.o" \
+"../Debug copy/ti_msp_dl_config.o" \
+"../targetConfigs/Debug/kyles_kirb-3.o" \
+"../targetConfigs/Debug/startup_mspm0g350x_ticlang.o" \
+"./targetConfigs/Debug/ti_msp_dl_config.o" \
+"../targetConfigs/Debug/ti_msp_dl_config.o" \
+"../Debug copy/device_linker.cmd" \
+"../targetConfigs/Debug/device_linker.cmd" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
@@ -28,7 +38,11 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Debug\ copy/subdir_vars.mk
+-include targetConfigs/Debug/subdir_vars.mk
 -include subdir_rules.mk
+-include Debug\ copy/subdir_rules.mk
+-include targetConfigs/Debug/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -132,22 +146,22 @@ EXE_OUTPUTS__QUOTED += \
 
 
 # All Target
-all: $(OBJS) $(GEN_CMDS)
+all: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@$(MAKE) --no-print-directory -Onone "kyles_final_proj.out"
 
 # Tool invocations
-kyles_final_proj.out: $(OBJS) $(GEN_CMDS)
+kyles_final_proj.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"C:/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"C:/Users/kyles/OneDrive/Desktop/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"C:/Users/kyles/OneDrive/Desktop/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
+	"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmclang.exe" @"device.opt"  -march=thumbv6m -mcpu=cortex-m0plus -mfloat-abi=soft -mlittle-endian -mthumb -O2 -gdwarf-3 -Wl,-m"kyles_final_proj.map" -Wl,-i"C:/ti/mspm0_sdk_2_08_00_03/source" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj" -Wl,-i"C:/MCC/Fall 2025/CSC202205/kirb-3/kyles_final_proj/kyles_final_proj/Debug/syscfg" -Wl,-i"C:/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib" -Wl,--diag_wrap=off -Wl,--display_error_number -Wl,--warn_sections -Wl,--xml_link_info="kyles_final_proj_linkInfo.xml" -Wl,--rom_model -o "kyles_final_proj.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" 
-	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" 
+	-$(RM) "LaunchPad.o" "clock.o" "kyles_kirb-3.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "kyles_kirb-3_config.o" "Debug copy\ti_msp_dl_config.o" "targetConfigs\Debug\ti_msp_dl_config.o" 
+	-$(RM) "LaunchPad.d" "clock.d" "kyles_kirb-3.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "kyles_kirb-3_config.d" "Debug copy\ti_msp_dl_config.d" "targetConfigs\Debug\ti_msp_dl_config.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
