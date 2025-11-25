@@ -159,7 +159,7 @@ void PWM_init(void)
   GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
 }  
 
-}
+
 
 
 
@@ -178,7 +178,6 @@ void RC_timer1_init(void)
 
 
 
-<<<<<<< HEAD
 
 
 RC_timer1_init()
@@ -186,9 +185,35 @@ RC_timer1_init()
     
 }
 
+
+
+
+
+typedef struct {
+    /* Selects timer module clock source DL_TIMER_CLOCK*/
+    DL_TIMER_CLOCK clockSel;
+    /* Selects the timer module clock divide ratio DL_TIMER_CLOCK_DIVIDE */
+    DL_TIMER_CLOCK_DIVIDE divideRatio;
+    /* Selects the timer module clock prescaler. Valid range 0-255 */
+    uint8_t prescale;
+} DL_Timer_ClockConfig;
+
+typedef enum {
+    /*! Selects BUSCLK as clock source */
+    DL_TIMER_CLOCK_BUSCLK = GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE,
+    /*! Selects 2X BUSCLK as clock source */
+    DL_TIMER_CLOCK_2X_BUSCLK = GPTIMER_CLKSEL_BUS2XCLK_SEL_ENABLE,
+    /*! Selects MFCLK as clock source */
+    DL_TIMER_CLOCK_MFCLK = GPTIMER_CLKSEL_MFCLK_SEL_ENABLE,
+    /*! Selects LFCLK as clock source */
+    DL_TIMER_CLOCK_LFCLK = GPTIMER_CLKSEL_LFCLK_SEL_ENABLE,
+    /*! Disables selected clock source */
+    DL_TIMER_CLOCK_DISABLE = GPTIMER_CLKSEL_LFCLK_SEL_DISABLE,
+} DL_TIMER_CLOCK;
+
+
+
 // git pull
 // git add .
 // git commit -m 'message here'
 // git push
-=======
->>>>>>> 04f1af6da53a3eaf02e1da99cedda0079a26c278
