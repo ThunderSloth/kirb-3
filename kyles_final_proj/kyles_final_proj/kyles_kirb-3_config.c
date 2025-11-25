@@ -222,18 +222,23 @@ static const DL_TimerA_ClockConfig gRC_TIM0ClockConfig = {
 
 void RC_timer0_init(void)
 {
-    DL_TimerA_setClockConfig(RC_TIM0_INST,
-        (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
+    /*
+    DL_TimerA_setClockConfig(RC_TIM0_INST, (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
 
-    void DL_Timer_setClockConfig(
-    GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+    void DL_Timer_setClockConfig(GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
+    {
+        gptimer->CLKSEL = (uint32_t)(config->clockSel);
 
-    gptimer->CLKSEL = (uint32_t)(config->clockSel);
+        gptimer->CLKDIV = (uint32_t)(config->divideRatio);
 
-    gptimer->CLKDIV = (uint32_t)(config->divideRatio);
+        gptimer->COMMONREGS.CPS = (config->prescale);
+    }
+    */
+    TIMA0->CLKSEL = (uint32_t)(GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE);
 
-    gptimer->COMMONREGS.CPS = (config->prescale);
+    TIMA0->CLKDIV = (uint32_t)(GPTIMER_CLKDIV_RATIO_DIV_BY_1);
 
+    TIMA0->COMMONREGS.CPS = (31U);
 
     DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
 
@@ -301,29 +306,6 @@ void RC_timer1_init(void)
 
 
 
-
-
-typedef struct {
-    /* Selects timer module clock source DL_TIMER_CLOCK*/
-    DL_TIMER_CLOCK clockSel;
-    /* Selects the timer module clock divide ratio DL_TIMER_CLOCK_DIVIDE */
-    DL_TIMER_CLOCK_DIVIDE divideRatio;
-    /* Selects the timer module clock prescaler. Valid range 0-255 */
-    uint8_t prescale;
-} DL_Timer_ClockConfig;
-
-typedef enum {
-    /*! Selects BUSCLK as clock source */
-    DL_TIMER_CLOCK_BUSCLK = GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE,
-    /*! Selects 2X BUSCLK as clock source */
-    DL_TIMER_CLOCK_2X_BUSCLK = GPTIMER_CLKSEL_BUS2XCLK_SEL_ENABLE,
-    /*! Selects MFCLK as clock source */
-    DL_TIMER_CLOCK_MFCLK = GPTIMER_CLKSEL_MFCLK_SEL_ENABLE,
-    /*! Selects LFCLK as clock source */
-    DL_TIMER_CLOCK_LFCLK = GPTIMER_CLKSEL_LFCLK_SEL_ENABLE,
-    /*! Disables selected clock source */
-    DL_TIMER_CLOCK_DISABLE = GPTIMER_CLKSEL_LFCLK_SEL_DISABLE,
-} DL_TIMER_CLOCK;
 
 
 
