@@ -63,6 +63,14 @@ void RC_timer1_init(void);
 #define RC_IN_CH5_PIN                                               (0x00002000)
 #define RC_IN_CH6_PIN                                               (0x00100000)
 //------------------------------------------------------------------------------
+#define GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE                 ((uint32_t)0x00000008U) 
+
+#define DL_SYSCTL_MCLK_DIVIDER_DISABLE                                     (0x0)
+
+
+
+
+//------------------------------------------------------------------------------
 // testing
 /*
 
@@ -145,7 +153,6 @@ void power_init(void)
 
 void GPIO_init(void)
 {
-  //Constants still need to be defined
 
   //Configure PWM motor output (TIMA1_C0) on pin PB2 
   IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
@@ -209,20 +216,29 @@ void GPIO_init(void)
 
 void clock_init(void)
 {
-  SYSCTL->SOCLOCK.BORTHRESHOLD = (uint32_t) SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
 
-  
+  //Sets BOR threshold at minimum level (does not activate)
+  SYSCTL->SOCLOCK.BORTHRESHOLD = (uint32_t) SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
+  //Sets the system oscillator to 32MHz
+  update_Reg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
+        SYSCTL_SYSOSCCFG_FREQ_MASK);
+  //Enables the medium frequency clock (4Mhz)
+  SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
+  //Sets up ultra low power clock (not divided)
+  update_Reg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
+        SYSCTL_MCLKCFG_UDIV_MASK);
+  //Disable main clock divider 
+  updateReg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) DL_SYSCTL_MCLK_DIVIDER_DISABLE,
+        SYSCTL_MCLKCFG_MDIV_MASK);
+
 }
 
 
 
 void PWM_init(void)
 {
-  gptimer->CLKSEL = (uint32_t)(config->clockSel);
-
-  gptimer->CLKDIV = (uint32_t)(config->divideRatio);
-
-  gptimer->COMMONREGS.CPS = (config->prescale);
+  
+  
 }  
 
 
@@ -258,3 +274,12 @@ RC_timer1_init()
 // git push
 =======
 >>>>>>> 04f1af6da53a3eaf02e1da99cedda0079a26c278
+
+ void update_Reg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
+{
+    uint32_t temp_reg;
+
+    temp_reg  = *reg;
+    temp_reg  = temp_reg & ~mask;
+    *reg = temp_reg | (value & mask);
+}
