@@ -76,13 +76,64 @@ void RC_timer1_init(void);
 
 
 
-//RC_timer1_init constants
+//RC_timer_init constants
 //-----------------------------------------------------------------------------
 #define RC_TIM1_INST                                                     (TIMG7)
+#define RC_TIM0_INST                                                     (TIMA0)
 #define TIMER_CLOCK_BUSCLK                               ((uint32_t)0x00000008U)
 #define TIMER_CLOCK_DIVIDE_1                             ((uint32_t)0x00000000U)
 #define TIM1_PRESCALE                                                      (31U)
+
+
+
+//=========== Should probably be renamed and cleaned up =======================
+#define DL_TIMER_COUNT_MODE_UP                           ((uint32_t)0x00000020U)
+/*  Counter counts up. */
+#define DL_TIMER_REPEAT_MODE_ENABLED                     ((uint32_t)0x00000002U)
+/*  Continues to advance following a zero event. */
+#define DL_TIMER_COUNT_AFTER_EN_ZERO                     ((uint32_t)0x20000000U)
+/*  The counter is set to zero */
+
+#define DL_TIMER_CC_MODE_CAPTURE                         ((uint32_t)0x00020000U)         
+/*  Capture */
+#define DL_TIMER_CC_ZCOND_TRIG_RISE                      ((uint32_t)0x00001000U)         
+/*  Rising edge of CCP or trigger assertion edge */
+#define DL_TIMER_CC_ZCOND_NONE                           ((uint32_t)0x00000000U)         
+/*  CCP edges have no effect */
+#define DL_TIMER_CC_ACOND_TIMCLK                         ((uint32_t)0x00000000U) 
+/*  Each TIMCLK */
+#define DL_TIMER_CC_CCOND_TRIG_RISE                      ((uint32_t)0x00000001U)         
+/*  Rising edge of CCP or trigger */
+#define DL_TIMER_CC_CCOND_TRIG_FALL                      ((uint32_t)0x00000002U)        
+/* !< Falling edge of CCP or trigger */
+
+#define DL_TIMER_CC_0_INDEX                                       ((uint8_t)0x0)
+#define DL_TIMER_CC_1_INDEX                                       ((uint8_t)0x1)
+#define DL_TIMER_CC_2_INDEX                                       ((uint8_t)0x2)
+#define DL_TIMER_CC_3_INDEX                                       ((uint8_t)0x3)
+
+#define DL_TIMER_CC_INPUT_INV_NOINVERT                   ((uint32_t)0x00000000U)         
+/*  Noninverted */
+#define DL_TIMER_CC_IN_SEL_CCPX                          ((uint32_t)0x00000000U)         
+/*  CCP of the corresponding capture */
+
+#define DL_TIMER_CZC_CCCTL0_ZCOND                        ((uint32_t)0x00000000U)         
+/*  CCCTL_0 ZCOND */
+#define DL_TIMER_CAC_CCCTL0_ACOND                        ((uint32_t)0x00000000U)        
+/*  CCCTL_0 ACOND */
+#define DL_TIMER_CLC_CCCTL0_LCOND                        ((uint32_t)0x00000000U)         
+/*  CCCTL_0 LCOND */
+
+#define DL_TIMERA_INTERRUPT_CC1_UP_EVENT                 ((uint32_t)0x00000200U)         
+/*  Set Interrupt Mask */
+#define DL_TIMERA_INTERRUPT_CC2_UP_EVENT                 ((uint32_t)0x00000400U)         
+/*  Set Interrupt Mask */
+#define DL_TIMERA_INTERRUPT_CC3_UP_EVENT                 ((uint32_t)0x00000800U)        
+/*  Set Interrupt Mask */
+//============================================================================
 //-----------------------------------------------------------------------------
+
+
 
 // testing
 /*
@@ -375,23 +426,12 @@ static const DL_TimerA_ClockConfig gRC_TIM0ClockConfig = {
 
 void RC_timer0_init(void)
 {
-    /*
-    DL_TimerA_setClockConfig(RC_TIM0_INST, (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
+    
+    TIMA0->CLKSEL = (uint32_t)(TIMER_CLOCK_BUSCLK);
 
-    void DL_Timer_setClockConfig(GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
-    {
-        gptimer->CLKSEL = (uint32_t)(config->clockSel);
+    TIMA0->CLKDIV = (uint32_t)(TIMER_CLOCK_DIVIDE_1);
 
-        gptimer->CLKDIV = (uint32_t)(config->divideRatio);
-
-        gptimer->COMMONREGS.CPS = (config->prescale);
-    }
-    */
-    TIMA0->CLKSEL = (uint32_t)(GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE);
-
-    TIMA0->CLKDIV = (uint32_t)(GPTIMER_CLKDIV_RATIO_DIV_BY_1);
-
-    TIMA0->COMMONREGS.CPS = (31U);
+    TIMA0->COMMONREGS.CPS = (TIM1_PRESCALE);
 
     DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
 
@@ -413,21 +453,21 @@ void RC_timer0_init(void)
     DL_TIMER_CC_1_INDEX);
 
     DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX_PAIR, DL_TIMER_CC_1_INDEX);
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX_PAIR, DL_TIMER_CC_1_INDEX);//
 
     DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
     DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
-    DL_TIMER_CC_2_INDEX);
+    DL_TIMER_CC_2_INDEX);//
 
     DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_2_INDEX);
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_2_INDEX);//
 
     DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
     DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
-    DL_TIMER_CC_3_INDEX);
+    DL_TIMER_CC_3_INDEX);//
 
     DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_3_INDEX);
+        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_3_INDEX);//
 
 
     DL_TimerA_setCounterControl(RC_TIM0_INST,
