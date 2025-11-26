@@ -3,7 +3,7 @@
    <banner>TI ARM Clang Linker Unix v4.0.0.LTS</banner>
    <copyright>Copyright (c) 1996-2018 Texas Instruments Incorporated</copyright>
    <command_line>/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/bin/tiarmlnk -I/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib -o Kirb-3-MSPM0G3507.out -mKirb-3-MSPM0G3507.map -i/Users/elibell/ti/mspm0_sdk_2_06_00_05/source -i/Users/elibell/Documents/kirb-3/source/Kirb-3-MSPM0G3507 -i/Users/elibell/Documents/kirb-3/source/Kirb-3-MSPM0G3507/Debug/syscfg -i/Applications/ti/ccstheia151/ccs/tools/compiler/ti-cgt-armllvm_4.0.0.LTS/lib --diag_wrap=off --display_error_number --warn_sections --xml_link_info=Kirb-3-MSPM0G3507_linkInfo.xml --rom_model ./kirb-3.o ./ti_msp_dl_config.o ./startup_mspm0g350x_ticlang.o -l./device_linker.cmd -ldevice.cmd.genlibs -llibc.a --start-group -llibc++.a -llibc++abi.a -llibc.a -llibsys.a -llibsysbm.a -llibclang_rt.builtins.a -llibclang_rt.profile.a --end-group --cg_opt_level=2</command_line>
-   <link_time>0x691e75a5</link_time>
+   <link_time>0x69271f73</link_time>
    <link_errors>0x0</link_errors>
    <output_file>/Users/elibell/Documents/kirb-3/source/Kirb-3-MSPM0G3507/Debug/Kirb-3-MSPM0G3507.out</output_file>
    <entry_point>

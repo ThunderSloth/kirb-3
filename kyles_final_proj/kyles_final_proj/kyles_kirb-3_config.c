@@ -1,410 +1,601 @@
+//=============================================================================
+// System Initialization Source File
+//=============================================================================
+// This module contains all runtime initialization routines executed during
+// system bring-up. Its responsibilities include:
+//
+//   • Enabling and resetting hardware blocks
+//   • Configuring GPIO routing and direction
+//   • Establishing system clock settings
+//   • Initializing timing resources used by motor control and RC input
+//
+// Each function in this file performs a focused portion of the startup
+// sequence. No function assumes prior peripheral state, and all hardware is
+// placed into a known, clean configuration before use.
+//
+//=============================================================================
+
+
+
 //-----------------------------------------------------------------------------
-// Loads standard C include files
+// Project Includes
 //-----------------------------------------------------------------------------
+// Standard C headers and core device definitions used throughout the project.
 #include <stdio.h>
 #include <ti/devices/msp/msp.h>
 
-//-----------------------------------------------------------------------------
-// Loads MSP launchpad board support macros and definitions
-//-----------------------------------------------------------------------------
 
+
+//-----------------------------------------------------------------------------
+// Hardware Configuration & Low-Level Access
+//-----------------------------------------------------------------------------
+// Hardware abstraction layers, peripheral configuration routines, and
+// definitions mapping the application logic to the physical device.
+#include "kyles_kirb-3.h"
 #include "ti/devices/msp/m0p/mspm0g350x.h"
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
-#include "ti_msp_dl_config.h"
 #include "clock.h"
 #include "LaunchPad.h"
+#include "ti_msp_dl_config.h"
+#include "kyles_kirb-3_config.h"
 
 
 //-----------------------------------------------------------------------------
-// Define function prototypes used by the program
-//-----------------------------------------------------------------------------
-void config_init(void)
-void power_init(void);
-void GPIO_init(void);
-void PWM_init(void);
-void RC_timer0_init(void);
-void RC_timer1_init(void);
-
-
-//-----------------------------------------------------------------------------
-// Define symbolic constants used by the program
+// Local configuration tables (for this module only)
 //-----------------------------------------------------------------------------
 
-// testing
-/*
+static GPIO_Regs *const g_gpio_ports[] = {
+    GPIOA,
+    GPIOB,
+};
 
-SYSCONFIG_WEAK void SYSCFG_DL_init(void)
+static GPTIMER_Regs *const g_gptimers[] = {
+    MOTOR_PWM_INST,
+    RC_TIM0_INST,
+    RC_TIM1_INST,
+};
+
+#define NUM_GPIO_PORTS   (sizeof(g_gpio_ports) / sizeof(g_gpio_ports[0]))
+#define NUM_GPTIMERS     (sizeof(g_gptimers) / sizeof(g_gptimers[0]))
+
+
+
+//-----------------------------------------------------------------------------
+// Local helpers
+//-----------------------------------------------------------------------------
+
+// Common 1 MHz up-counter configuration for all GPTIMER instances used here.
+// Assumes a 32 MHz system bus clock and uses CC0 to define
+// zero/advance/load behavior.
+static void gptimer_init_1mhz_upcounter(GPTIMER_Regs *timer,
+                                        uint32_t prescaler,
+                                        uint32_t period_us)
 {
-    SYSCFG_DL_initPower();
-    SYSCFG_DL_GPIO_init();
-    // Module-Specific Initializations
-    SYSCFG_DL_SYSCTL_init();
-    SYSCFG_DL_MOTOR_PWM_init();
-    SYSCFG_DL_RC_TIM0_init();
-    SYSCFG_DL_RC_TIM1_init();
-    //Ensure backup structures have no valid state 
-	gMOTOR_PWMBackup.backupRdy 	= false;
-	gRC_TIM0Backup.backupRdy 	= false;
-	gRC_TIM1Backup.backupRdy 	= false;
+    // Select bus clock as source
+    timer->CLKSEL =
+        GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE |
+        GPTIMER_CLKSEL_MFCLK_SEL_DISABLE |
+        GPTIMER_CLKSEL_LFCLK_SEL_DISABLE;
 
+    // No clock division
+    timer->CLKDIV = GPTIMER_CLKDIV_RATIO_DIV_BY_1;
+
+    // Prescale 32 MHz → 1 MHz tick
+    update_reg(&timer->COMMONREGS.CPS,
+               prescaler,
+               GPTIMER_CPS_PCNT_MASK);
+
+    // Set period
+    timer->COUNTERREGS.LOAD = period_us - TIMER_LOAD_MINUS_ONE;
+
+    // Configure for periodic up-count mode
+    timer->COUNTERREGS.CTRCTL =
+        GPTIMER_CTRCTL_CVAE_ZEROVAL |
+        GPTIMER_CTRCTL_REPEAT_REPEAT_1 |
+        GPTIMER_CTRCTL_CM_UP;
+
+    // Assign CC0 to define zero / advance / load conditions
+    update_reg(&timer->COUNTERREGS.CTRCTL,
+               GPTIMER_CTRCTL_CZC_CCCTL0_ZCOND |
+               GPTIMER_CTRCTL_CAC_CCCTL0_ACOND |
+               GPTIMER_CTRCTL_CLC_CCCTL0_LCOND,
+               GPTIMER_CTRCTL_CZC_MASK |
+               GPTIMER_CTRCTL_CAC_MASK |
+               GPTIMER_CTRCTL_CLC_MASK);
+}
+
+typedef enum {
+    GPTIMER_CC_IDX_0,
+    GPTIMER_CC_IDX_1,
+    GPTIMER_CC_IDX_2,
+    GPTIMER_CC_IDX_3,
+} GptimerCcIndex;
+
+typedef enum {
+    GPTIMER_INPUT_DIRECT,
+    GPTIMER_INPUT_PAIR,
+} GptimerInputMode;
+
+// Configure CC0 as a "zero-on-rising-edge" channel, no capture stored.
+// This is used as the timebase reset for RC pulse width measurement.
+static void gptimer_config_zero_on_rise_cc0(GPTIMER_Regs    *timer,
+                                            GptimerInputMode input_mode)
+{
+    volatile uint32_t *ccctl_reg =
+        &timer->COUNTERREGS.CCCTL_01[0];
+    volatile uint32_t *ifctl_reg =
+        &timer->COUNTERREGS.IFCTL_01[0];
+
+    // Capture mode, zero on rising edge, no capture stored
+    update_reg(ccctl_reg,
+               GPTIMER_CCCTL_01_COC_CAPTURE |
+               GPTIMER_CCCTL_01_ZCOND_CC_TRIG_RISE |
+               GPTIMER_CCCTL_01_ACOND_TIMCLK |
+               GPTIMER_CCCTL_01_CCOND_NOCAPTURE,
+               GPTIMER_CCCTL_01_COC_MASK |
+               GPTIMER_CCCTL_01_ZCOND_MASK |
+               GPTIMER_CCCTL_01_LCOND_MASK |
+               GPTIMER_CCCTL_01_ACOND_MASK |
+               GPTIMER_CCCTL_01_CCOND_MASK);
+
+    uint32_t input_select =
+        (input_mode == GPTIMER_INPUT_PAIR)
+            ? GPTIMER_IFCTL_01_ISEL_CCPX_INPUT_PAIR
+            : GPTIMER_IFCTL_01_ISEL_CCPX_INPUT;
+
+    update_reg(ifctl_reg,
+               GPTIMER_IFCTL_01_INV_NOINVERT |
+               input_select,
+               GPTIMER_IFCTL_01_INV_MASK |
+               GPTIMER_IFCTL_01_ISEL_MASK);
+}
+
+// Configure a CC channel for falling-edge capture on the timer input.
+//
+//  - CC0/CC1 → CCCTL_01 / IFCTL_01
+//  - CC2/CC3 → CCCTL_23 / IFCTL_23
+//
+// For CC2/CC3, the input is always direct; input_mode is ignored.
+// Note: CC0 falling-edge capture is not used in this project, so
+// GPTIMER_CC_IDX_0 is treated as a no-op for now.
+static void gptimer_config_fall_capture(GPTIMER_Regs    *timer,
+                                        GptimerCcIndex   cc_index,
+                                        GptimerInputMode input_mode)
+{
+    if (cc_index == GPTIMER_CC_IDX_0) {
+        // Not used in this project; reserved for future expansion.
+        return;
+    }
+
+    if (cc_index == GPTIMER_CC_IDX_1) {
+        // CC1 lives in CCCTL_01 / IFCTL_01 at index 1
+        uint32_t reg_index = 1u;
+
+        volatile uint32_t *ccctl_reg =
+            &timer->COUNTERREGS.CCCTL_01[reg_index];
+        volatile uint32_t *ifctl_reg =
+            &timer->COUNTERREGS.IFCTL_01[reg_index];
+
+        // Capture on falling edge, no zero effect
+        update_reg(ccctl_reg,
+                   GPTIMER_CCCTL_01_COC_CAPTURE |
+                   GPTIMER_CCCTL_01_ZCOND_CC_TRIG_NO_EFFECT |
+                   GPTIMER_CCCTL_01_ACOND_TIMCLK |
+                   GPTIMER_CCCTL_01_CCOND_CC_TRIG_FALL,
+                   GPTIMER_CCCTL_01_COC_MASK |
+                   GPTIMER_CCCTL_01_ZCOND_MASK |
+                   GPTIMER_CCCTL_01_LCOND_MASK |
+                   GPTIMER_CCCTL_01_ACOND_MASK |
+                   GPTIMER_CCCTL_01_CCOND_MASK);
+
+        uint32_t input_select =
+            (input_mode == GPTIMER_INPUT_PAIR)
+                ? GPTIMER_IFCTL_01_ISEL_CCPX_INPUT_PAIR
+                : GPTIMER_IFCTL_01_ISEL_CCPX_INPUT;
+
+        update_reg(ifctl_reg,
+                   GPTIMER_IFCTL_01_INV_NOINVERT |
+                   input_select,
+                   GPTIMER_IFCTL_01_INV_MASK |
+                   GPTIMER_IFCTL_01_ISEL_MASK);
+    } else {
+        // CC2 / CC3 live in CCCTL_23 / IFCTL_23 at indices 0 / 1
+        uint32_t reg_index = ((uint32_t)cc_index) - 2u;
+
+        volatile uint32_t *ccctl_reg =
+            &timer->COUNTERREGS.CCCTL_23[reg_index];
+        volatile uint32_t *ifctl_reg =
+            &timer->COUNTERREGS.IFCTL_23[reg_index];
+
+        // Capture on falling edge, no zero effect
+        update_reg(ccctl_reg,
+                   GPTIMER_CCCTL_23_COC_CAPTURE |
+                   GPTIMER_CCCTL_23_ZCOND_CC_TRIG_NO_EFFECT |
+                   GPTIMER_CCCTL_23_ACOND_TIMCLK |
+                   GPTIMER_CCCTL_23_CCOND_CC_TRIG_FALL,
+                   GPTIMER_CCCTL_23_COC_MASK |
+                   GPTIMER_CCCTL_23_ZCOND_MASK |
+                   GPTIMER_CCCTL_23_LCOND_MASK |
+                   GPTIMER_CCCTL_23_ACOND_MASK |
+                   GPTIMER_CCCTL_23_CCOND_MASK);
+
+        // Direct CCP input for CC2/CC3
+        update_reg(ifctl_reg,
+                   GPTIMER_IFCTL_23_INV_NOINVERT |
+                   GPTIMER_IFCTL_23_ISEL_CCPX_INPUT,
+                   GPTIMER_IFCTL_23_INV_MASK |
+                   GPTIMER_IFCTL_23_ISEL_MASK);
+    }
 }
 
 
-*/
 
+//=============================================================================
+// Function Implementations
+//=============================================================================
+// All runtime logic begins below. Each function configures or drives a specific
+// subsystem and should have a single, clear responsibility.
+
+
+
+//-----------------------------------------------------------------------------
+// config_init
+//-----------------------------------------------------------------------------
+// Performs the full system bring-up sequence. This function calls all
+// subsystem-specific initialization routines:
+//
+//   - Power domain setup and peripheral resets
+//   - Pin routing and GPIO configuration
+//   - System clock configuration
+//   - Timer and PWM setup
+//   - RC capture timer configuration
+//
+// This is the top-level initialization entry point for the application.
+//-----------------------------------------------------------------------------
 void config_init(void)
 {
     power_init();
-    GPIO_init();
-    PWM_init();
-    RC_timer0_init();
-    RC_timer1_init();
-
-
+    gpio_init();
+    sys_clock_init();
+    pwm_init();
+    rc_timer0_init();
+    rc_timer1_init();
 }
 
 
 
+//-----------------------------------------------------------------------------
+// power_init
+//-----------------------------------------------------------------------------
+// Establishes a known starting condition for all hardware used by the
+// application. For each required peripheral, the routine:
+//
+//   1. Asserts a reset to clear sticky state and return registers to defaults
+//   2. Enables the corresponding power domain
+//   3. Waits briefly for clock and power conditions to stabilize
+//
+// No peripheral is assumed to be pre-configured; every block is explicitly
+// reset and powered on before later modules configure it further.
+//-----------------------------------------------------------------------------
 void power_init(void)
 {
-    // Reset two GPIO peripherals
-    // DL_GPIO_reset(GPIOA);
-    GPIOA->GPRCM.RSTCTL = (GPIO_RSTCTL_KEY_UNLOCK_W |
-                            GPIO_RSTCTL_RESETSTKYCLR_CLR |
-                            GPIO_RSTCTL_RESETASSERT_ASSERT);
-    //DL_GPIO_reset(GPIOB);
-    GPIOB->GPRCM.RSTCTL = (GPIO_RSTCTL_KEY_UNLOCK_W |
-                            GPIO_RSTCTL_RESETSTKYCLR_CLR |
-                            GPIO_RSTCTL_RESETASSERT_ASSERT);
+    // Reset and enable all GPIO ports listed in g_gpio_ports
+    for (uint32_t idx = 0; idx < NUM_GPIO_PORTS; idx++) {
+        GPIO_Regs *gpio_port = g_gpio_ports[idx];
 
-    //DL_TimerA_reset(MOTOR_PWM_INST);
-    //Resets the PWM instance of Timer A
-    MOTOR_PWM_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
-                                    GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
-                                    GPTIMER_RSTCTL_RESETASSERT_ASSERT);
+        gpio_port->GPRCM.RSTCTL =
+            GPIO_RSTCTL_KEY_UNLOCK_W |
+            GPIO_RSTCTL_RESETSTKYCLR_CLR |
+            GPIO_RSTCTL_RESETASSERT_ASSERT;
 
-    //DL_TimerA_reset(RC_TIM0_INST);
-    //Resets the TIM0 instance of Timer A
-    RC_TIM0_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
-                                    GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
-                                    GPTIMER_RSTCTL_RESETASSERT_ASSERT);
+        gpio_port->GPRCM.PWREN =
+            GPIO_PWREN_KEY_UNLOCK_W |
+            GPIO_PWREN_ENABLE_ENABLE;
+    }
 
-    //   DL_TimerG_reset(RC_TIM1_INST);
-    //Resets the TIM1 instance of Timer G
-    RC_TIM1_INST->GPRCM.RSTCTL = (GPTIMER_RSTCTL_KEY_UNLOCK_W | 
-                                    GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
-                                    GPTIMER_RSTCTL_RESETASSERT_ASSERT);
+    // Reset and enable all GPTIMER instances used by this application
+    for (uint32_t idx = 0; idx < NUM_GPTIMERS; idx++) {
+        GPTIMER_Regs *timer = g_gptimers[idx];
 
-    // Enable power to two GPIO peripherals
-    GPIOA->GPRCM.PWREN = (GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE);
-    GPIOB->GPRCM.PWREN = (GPIO_PWREN_KEY_UNLOCK_W | GPIO_PWREN_ENABLE_ENABLE);
+        timer->GPRCM.RSTCTL =
+            GPTIMER_RSTCTL_KEY_UNLOCK_W |
+            GPTIMER_RSTCTL_RESETSTKYCLR_CLR |
+            GPTIMER_RSTCTL_RESETASSERT_ASSERT;
 
-    //DL_TimerA_enablePower(MOTOR_PWM_INST);
-    //
-    MOTOR_PWM_INST->GPRCM.PWREN = (GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE);
+        timer->GPRCM.PWREN =
+            GPTIMER_PWREN_KEY_UNLOCK_W |
+            GPTIMER_PWREN_ENABLE_ENABLE;
+    }
 
-    // DL_TimerA_enablePower(RC_TIM0_INST);
-    RC_TIM0_INST->GPRCM.PWREN = (GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE);
-
-    // DL_TimerG_enablePower(RC_TIM1_INST);
-    RC_TIM1_INST->GPRCM.PWREN = (GPTIMER_PWREN_KEY_UNLOCK_W | GPTIMER_PWREN_ENABLE_ENABLE);
-
-    clock_delay(24);
-}
-
-
-void GPIO_init(void)
-{
-
-  //Configure PWM motor output (TIMA1_C0) on pin PB2 
-  IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
-  //Enable output on pin PB2
-  GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
-  
-  //Configure PWM motor output (TIMA1_C1) on pin PB3 
-  IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C1_IOMUX] = GPIO_MOTOR_PWM_C1_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;  
-  //Enable output on pin PB3
-  GPIO_MOTOR_PWM_C1_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C1_PIN;
-
-  //Configure RC input (TIMA0_C0N) on pin PA8 
-  IOMUX->SECCFG.PINCM[GPIO_RC_TIM0_C0_IOMUX] =
-      GPIO_RC_TIM0_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
-
-  //Configure RC input (TIM0_C2N) on pin PA15 
-  IOMUX->SECCFG.PINCM[GPIO_RC_TIM0_C2_IOMUX] =
-      GPIO_RC_TIM0_C2_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
-
-  //Configure RC input (TIMA0_C3) on pin PA25
-  IOMUX->SECCFG.PINCM[GPIO_RC_TIM0_C3_IOMUX] =
-      GPIO_RC_TIM0_C3_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
-  
-  //Configure RC input (TIMA1_C0) on pin PA28
-  IOMUX->SECCFG.PINCM[GPIO_RC_TIM1_C0_IOMUX] =
-      GPIO_RC_TIM1_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED | IOMUX_PINCM_INENA_ENABLE;
-
+    // Allow peripherals time to come out of reset before configuration
+    clock_delay(PWR_EN_DELAY_MS);
 }
 
 
 
-void clock_init(void)
+//-----------------------------------------------------------------------------
+// gpio_init
+//-----------------------------------------------------------------------------
+// Configures all pins used by the application. Responsibilities include:
+//
+//   • Routing peripheral signals onto their assigned device pins
+//   • Enabling output drivers for PWM channels
+//   • Enabling input buffers for RC capture channels
+//
+// The function does not assume any prior pin state and only configures the
+// pins required by higher-level modules.
+//-----------------------------------------------------------------------------
+void gpio_init(void)
 {
+    // Configure pins used for motor PWM output from motor config table
+    for (uint32_t idx = 0; idx < MOTOR_COUNT; idx++) {
+        const MtrConfig *motor_cfg = &g_mtr_cfg[idx];
 
-  //Sets BOR threshold at minimum level (does not activate)
-  SYSCTL->SOCLOCK.BORTHRESHOLD = (uint32_t) SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
-  //Sets the system oscillator to 32MHz
-  update_Reg(&SYSCTL->SOCLOCK.SYSOSCCFG, (uint32_t) SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
-        SYSCTL_SYSOSCCFG_FREQ_MASK);
-  //Enables the medium frequency clock (4MHz)
-  SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
-  //Sets up ultra low power clock (not divided)
-  update_Reg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) SYSCTL_MCLKCFG_UDIV_NODIVIDE,
-        SYSCTL_MCLKCFG_UDIV_MASK);
-  //Disable main clock divider 
-  updateReg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) DL_SYSCTL_MCLK_DIVIDER_DISABLE,
-        SYSCTL_MCLKCFG_MDIV_MASK);
+        IOMUX->SECCFG.PINCM[motor_cfg->iomux_pincm] =
+            motor_cfg->iomux_func |
+            IOMUX_PINCM_PC_CONNECTED;
 
-}
+        motor_cfg->gpio_port->DOESET31_0 = motor_cfg->gpio_pin;
+    }
 
-  //IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
+    uint32_t rc_gpio_mask = 0u;
 
-  //GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
+    // Configure RC channels based on backend type
+    for (uint32_t idx = 0; idx < RC_CH_COUNT; idx++) {
+        const RcChannelConfig *rc_cfg = &g_rc_cfg[idx];
 
-void PWM_init(void)
-{
-  clock_delay(24);
+        uint32_t base_input_cfg =
+            IOMUX_PINCM_INENA_ENABLE  |
+            IOMUX_PINCM_PC_CONNECTED  |
+            IOMUX_PINCM_INV_DISABLE   |
+            IOMUX_PINCM_PIPU_DISABLE  |
+            IOMUX_PINCM_PIPD_DISABLE  |
+            IOMUX_PINCM_HYSTEN_DISABLE |
+            IOMUX_PINCM_WUEN_DISABLE;
 
-  TIMA0->CLKSEL = (GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE | 
-                   GPTIMER_CLKSEL_MFCLK_SEL_DISABLE |  
-                   GPTIMER_CLKSEL_LFCLK_SEL_DISABLE);
+        switch (rc_cfg->backend) {
+            case RC_BACKEND_TIMER:
+                // Timer-based capture: same pad electrical config, different PF
+                IOMUX->SECCFG.PINCM[rc_cfg->iomux_pincm] =
+                    base_input_cfg |
+                    rc_cfg->iomux_func;      // e.g., TIMA0_CCPx
+                break;
 
-  TIMA0->CLKDIV = GPTIMER_CLKDIV_RATIO_DIV_BY_8;
+            case RC_BACKEND_GPIO:
+                // GPIO-based capture: same pad config, PF = GPIO
+                IOMUX->SECCFG.PINCM[rc_cfg->iomux_pincm] =
+                    base_input_cfg |
+                    IOMUX_PINCM_FUNCSEL_GPIO;
 
-  //Set the pre-scale count value that divides selected clock by PCNT+1
-  // TimerClock = BusCock / (DIVIDER * (PRESCALER))
-  // 200,000 Hz = 40,000,000 Hz / (8 * (24 + 1))
-  TIMA0->COMMONREGS.CPS = GPTIMER_CPS_PCNT_MASK & 0x18;
+                rc_gpio_mask |= rc_cfg->irq_event;
+                break;
 
-  // Set C3 action for compare 
-  // On Zero, set output HIGH; On Compares up, set output LOW
-  TIMA0->COUNTERREGS.CCACT_23[1] = (GPTIMER_CCACT_23_FENACT_DISABLED | 
-        GPTIMER_CCACT_23_CC2UACT_DISABLED | GPTIMER_CCACT_23_CC2DACT_DISABLED |
-        GPTIMER_CCACT_23_CUACT_CCP_LOW | GPTIMER_CCACT_23_CDACT_DISABLED | 
-        GPTIMER_CCACT_23_LACT_DISABLED | GPTIMER_CCACT_23_ZACT_CCP_HIGH);
+            default:
+                // No action for unknown backend (should not happen)
+                break;
+        }
+    }
 
-  // Set timer reload value
-  TIMA0->COUNTERREGS.LOAD = GPTIMER_LOAD_LD_MASK & (load_value - 1);
+    // Clear interrupt statuses and enable interrupts for GPIO-backed RC pins
+    if (rc_gpio_mask != 0u) {
+        RC_IN_PORT->CPU_INT.ICLR  |= rc_gpio_mask;
+        RC_IN_PORT->CPU_INT.IMASK |= rc_gpio_mask;
+    }
 
-  // Set timer compare value
-  TIMA0->COUNTERREGS.CC_23[1] = GPTIMER_CC_23_CCVAL_MASK & compare_value;
-
-  // Set compare control for PWM func with output initially low
-  TIMA0->COUNTERREGS.OCTL_23[1] = (GPTIMER_OCTL_23_CCPIV_LOW | 
-                GPTIMER_OCTL_23_CCPOINV_NOINV | GPTIMER_OCTL_23_CCPO_FUNCVAL);
-  //
-  TIMA0->COUNTERREGS.CCCTL_23[1] = GPTIMER_CCCTL_23_CCUPD_IMMEDIATELY;
-
-
-  // When enabled load 0, set timer to count up
-  TIMA0->COUNTERREGS.CTRCTL = GPTIMER_CTRCTL_CVAE_ZEROVAL | 
-                 GPTIMER_CTRCTL_REPEAT_REPEAT_1 | GPTIMER_CTRCTL_CM_UP;
-
-  TIMA0->COMMONREGS.CCLKCTL = GPTIMER_CCLKCTL_CLKEN_ENABLED;
-
-  // No interrupt is required
-  TIMA0->CPU_INT.IMASK = GPTIMER_CPU_INT_IMASK_L_CLR;
-
-  // Set TIMA0_C3 as output
-  TIMA0->COMMONREGS.CCPD =(GPTIMER_CCPD_C0CCP3_OUTPUT | 
-         GPTIMER_CCPD_C0CCP2_INPUT | GPTIMER_CCPD_C0CCP1_INPUT | 
-         GPTIMER_CCPD_C0CCP0_INPUT);;
-    /*
-    1. In the TIMx.CTRCTL register, set the desired counter control settings for:
-        a. Up-counting (CM = 2) or down-counting mode (CM = 0) and counter value after enable (CVAE) (see as
-            described in Section 27.2.2)
-        b. Zero (CZC), advance (CAC), and load control (CLC) to specify what condition controls zeroing,
-            advancing, or loading the counter
-        c. Repeat or one-shot mode (REPEAT)
-    */
-    MOTOR_PWM_INST->COUNTERREGS.CTRCTL = GPTIMER_CTRCTL_CVAE_ZEROVAL | 
-                 GPTIMER_CTRCTL_REPEAT_REPEAT_1 | GPTIMER_CTRCTL_CM_UP;
-
-    DL_TimerA_setCounterControl(DL_TIMER_CZC_CCCTL0_ZCOND,DL_TIMER_CAC_CCCTL0_ACOND,DL_TIMER_CLC_CCCTL0_LCOND);
-  DL_Common_updateReg(&gptimer->
-  
-    MOTOR_PWM_INST->COUNTERREGS.CTRCTL,
-        ((uint32_t) zeroCtl | (uint32_t) advCtl | (uint32_t) loadCtl),
-        (GPTIMER_CTRCTL_CZC_MASK | GPTIMER_CTRCTL_CAC_MASK |
-            GPTIMER_CTRCTL_CLC_MASK));
-    // 2. Set the TIMx.LOAD value to configure the PWM period.
-
-    // 3. Set the TIMx.CC_xy[0/1] value to configure the duty cycle.
-
-    // 4. Set TIMx.CCCTL_xy[0/1].COC = 1 for compare mode.
-
-    /*
-    5. Configure CCP as an output for the CC block by setting respective bit in the CCPD registers. For instance, if
-        TIMx Channel 0 is an output, set CCPD.C0CCP0 = 1.
-    */
-  IOMUX->SECCFG.PINCM[GPIO_MOTOR_PWM_C0_IOMUX] = GPIO_MOTOR_PWM_C0_IOMUX_FUNC | IOMUX_PINCM_PC_CONNECTED;
-
-  GPIO_MOTOR_PWM_C0_PORT->DOESET31_0 = GPIO_MOTOR_PWM_C0_PIN;
-}  
-
-
-    /*
-    6. In TIMx.CCACT_xy[0/1], set the CCP output action settings for compare events, zero events, load events,
-        software force action, or fault events (TIMA only).
-    */
-    MOTOR_PWM_INST->COUNTERREGS.CCACT_01[0] = (GPTIMER_CCACT_01_FENACT_DISABLED | 
-        GPTIMER_CCACT_01_CC2UACT_DISABLED | GPTIMER_CCACT_01_CC2DACT_DISABLED |
-        GPTIMER_CCACT_01_CUACT_CCP_LOW | GPTIMER_CCACT_01_CDACT_DISABLED | 
-        GPTIMER_CCACT_01_LACT_DISABLED | GPTIMER_CCACT_01_ZACT_CCP_HIGH);
-
-    // 7. In TIMx.OCTL_xy[0/1], set CCPO = 0 to select the signal generator output.
-
-    // 8. Enable the corresponding CCP output by setting ODIS.C0CCPn to 1 for the corresponding counter n.
-
-    /* 
-    9. Configure polarity of the signal using the CCPOINV bit, and configure CCPIV to specify the CCP output state
-        while disabled.
-    */
-
-    // 10. Enable the counter by setting TIMx.CTRCTL.EN = 1.
-
-/*
- * Timer clock configuration to be sourced by BUSCLK /  (32000000 Hz)
- * timerClkFreq = (timerClkSrc / (timerClkDivRatio * (timerClkPrescale + 1)))
- *   1000000 Hz = 32000000 Hz / (1 * (31 + 1))
- */
-static const DL_TimerA_ClockConfig gRC_TIM0ClockConfig = {
-    .clockSel    = DL_TIMER_CLOCK_BUSCLK,
-    .divideRatio = DL_TIMER_CLOCK_DIVIDE_1,
-    .prescale = 31U
-};
-
-/*
- * Timer load value (where the counter starts from) is calculated as (timerPeriod * timerClockFreq) - 1
- * RC_TIM0_INST_LOAD_VALUE = (65ms * 1000000 Hz) - 1
- */
-
-void RC_timer0_init(void)
-{
-    DL_TimerA_setClockConfig(RC_TIM0_INST,
-        (DL_TimerA_ClockConfig *) &gRC_TIM0ClockConfig);
-
-    void DL_Timer_setClockConfig(
-    GPTIMER_Regs *gptimer, const DL_Timer_ClockConfig *config)
-
-    gptimer->CLKSEL = (uint32_t)(config->clockSel);
-
-    gptimer->CLKDIV = (uint32_t)(config->divideRatio);
-
-    gptimer->COMMONREGS.CPS = (config->prescale);
-
-
-    DL_TimerA_setLoadValue(RC_TIM0_INST,64999);
-
-    DL_TimerA_setCounterMode(RC_TIM0_INST,DL_TIMER_COUNT_MODE_UP);
-
-    DL_TimerA_setCounterRepeatMode(RC_TIM0_INST,DL_TIMER_REPEAT_MODE_ENABLED);
-
-    DL_TimerA_setCounterValueAfterEnable(RC_TIM0_INST,DL_TIMER_COUNT_AFTER_EN_ZERO);
-
-    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
-    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_TRIG_RISE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_RISE),
-    DL_TIMER_CC_0_INDEX);
-
-    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_0_INDEX);
-
-    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
-    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
-    DL_TIMER_CC_1_INDEX);
-
-    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX_PAIR, DL_TIMER_CC_1_INDEX);
-
-    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
-    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
-    DL_TIMER_CC_2_INDEX);
-
-    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_2_INDEX);
-
-    DL_TimerA_setCaptureCompareCtl(RC_TIM0_INST,
-    DL_TIMER_CC_MODE_CAPTURE, (DL_TIMER_CC_ZCOND_NONE | DL_TIMER_CC_ACOND_TIMCLK | DL_TIMER_CC_CCOND_TRIG_FALL),
-    DL_TIMER_CC_3_INDEX);
-
-    DL_TimerA_setCaptureCompareInput(RC_TIM0_INST,
-        DL_TIMER_CC_INPUT_INV_NOINVERT,DL_TIMER_CC_IN_SEL_CCPX, DL_TIMER_CC_3_INDEX);
-
-
-    DL_TimerA_setCounterControl(RC_TIM0_INST,
-        DL_TIMER_CZC_CCCTL0_ZCOND,
-        DL_TIMER_CAC_CCCTL0_ACOND,
-        DL_TIMER_CLC_CCCTL0_LCOND
-    );
-
-    DL_TimerA_startCounter(RC_TIM0_INST);
-
-    DL_TimerA_enableInterrupt(RC_TIM0_INST , DL_TIMERA_INTERRUPT_CC1_UP_EVENT |
-		DL_TIMERA_INTERRUPT_CC2_UP_EVENT |
-		DL_TIMERA_INTERRUPT_CC3_UP_EVENT);
-
-    DL_TimerA_enableClock(RC_TIM0_INST);
+    // Set interrupt polarity for GPIO pins (falling edge)
+    RC_IN_PORT->POLARITY15_0  |= GPIO_POLARITY15_0_DIO13_FALL;
+    RC_IN_PORT->POLARITY31_16 |= GPIO_POLARITY31_16_DIO20_FALL;
 }
 
 
 
-void RC_timer1_init(void)
+//-----------------------------------------------------------------------------
+// sys_clock_init
+//-----------------------------------------------------------------------------
+// Sets up global clocking behavior for the system. This routine:
+//
+//   • Configures oscillator frequency and related timing parameters
+//   • Enables optional timing sources used by other subsystems
+//   • Programs clock dividers to establish CPU and peripheral timing
+//
+// These settings define the timing base for all timer modules and must be
+// applied before any peripheral that depends on system clocking.
+//-----------------------------------------------------------------------------
+void sys_clock_init(void)
 {
+    // Set brown-out reset threshold to minimum sensitivity
+    SYSCTL->SOCLOCK.BORTHRESHOLD = SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
 
+    // Configure system oscillator to 32 MHz base frequency
+    update_reg(&SYSCTL->SOCLOCK.SYSOSCCFG,
+               SYSCTL_SYSOSCCFG_FREQ_SYSOSCBASE,
+               SYSCTL_SYSOSCCFG_FREQ_MASK);
+
+    // Enable medium-frequency tick (4 MHz time base)
+    SYSCTL->SOCLOCK.MCLKCFG |= SYSCTL_MCLKCFG_USEMFTICK_ENABLE;
+
+    // No division on the ultra-low-power clock
+    update_reg(&SYSCTL->SOCLOCK.MCLKCFG,
+               SYSCTL_MCLKCFG_UDIV_NODIVIDE,
+               SYSCTL_MCLKCFG_UDIV_MASK);
+
+    // Disable main MCLK divider (run at full SYSOSC rate)
+    update_reg(&SYSCTL->SOCLOCK.MCLKCFG,
+               DL_SYSCTL_MCLK_DIVIDER_DISABLE,
+               SYSCTL_MCLKCFG_MDIV_MASK);
 }
 
 
 
-
-
-
-
-
-
-
-typedef struct {
-    /* Selects timer module clock source DL_TIMER_CLOCK*/
-    DL_TIMER_CLOCK clockSel;
-    /* Selects the timer module clock divide ratio DL_TIMER_CLOCK_DIVIDE */
-    DL_TIMER_CLOCK_DIVIDE divideRatio;
-    /* Selects the timer module clock prescaler. Valid range 0-255 */
-    uint8_t prescale;
-} DL_Timer_ClockConfig;
-
-typedef enum {
-    /*! Selects BUSCLK as clock source */
-    DL_TIMER_CLOCK_BUSCLK = GPTIMER_CLKSEL_BUSCLK_SEL_ENABLE,
-    /*! Selects 2X BUSCLK as clock source */
-    DL_TIMER_CLOCK_2X_BUSCLK = GPTIMER_CLKSEL_BUS2XCLK_SEL_ENABLE,
-    /*! Selects MFCLK as clock source */
-    DL_TIMER_CLOCK_MFCLK = GPTIMER_CLKSEL_MFCLK_SEL_ENABLE,
-    /*! Selects LFCLK as clock source */
-    DL_TIMER_CLOCK_LFCLK = GPTIMER_CLKSEL_LFCLK_SEL_ENABLE,
-    /*! Disables selected clock source */
-    DL_TIMER_CLOCK_DISABLE = GPTIMER_CLKSEL_LFCLK_SEL_DISABLE,
-} DL_TIMER_CLOCK;
-
-
-
-// git pull
-// git add .
-// git commit -m 'message here'
-// git push
-
- void update_Reg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
+//-----------------------------------------------------------------------------
+// pwm_init
+//-----------------------------------------------------------------------------
+// Initializes the timing resource used to generate motor PWM signals. The
+// routine configures:
+//
+//   • Clock source and prescaler for the timing module
+//   • Counting mode and load period for PWM timing
+//   • Compare values defining pulse width
+//   • Output action rules (set on zero, clear on compare, etc.)
+//   • Pin output behavior including polarity and enable state
+//
+// The result is a fully configured PWM generator producing defined pulse
+// widths on the assigned output channels.
+//-----------------------------------------------------------------------------
+void pwm_init(void)
 {
-    uint32_t temp_reg;
+    // Common 1 MHz up-counter configuration for the PWM timer
+    gptimer_init_1mhz_upcounter(MOTOR_PWM_INST,
+                                MOTOR_PWM_PRESCALER,
+                                MOTOR_PWM_PERIOD_US);
 
-    temp_reg  = *reg;
-    temp_reg  = temp_reg & ~mask;
-    *reg = temp_reg | (value & mask);
+    // Configure shadow compare for both PWM channels
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.CCCTL_01[0],
+               GPTIMER_CCCTL_01_CCUPD_ZERO_EVT,
+               GPTIMER_CCCTL_01_CCUPD_MASK);
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.CCCTL_01[1],
+               GPTIMER_CCCTL_01_CCUPD_ZERO_EVT,
+               GPTIMER_CCCTL_01_CCUPD_MASK);
+
+    // Init duty cycle to neutral pulse width
+    MOTOR_PWM_INST->COUNTERREGS.CC_01[0] = SERVO_NEUTRAL_PULSE_WIDTH_US;
+    MOTOR_PWM_INST->COUNTERREGS.CC_01[1] = SERVO_NEUTRAL_PULSE_WIDTH_US;
+
+    // Configure compare mode for CC registers
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.CCCTL_01[0],
+               GPTIMER_CCCTL_01_COC_COMPARE,
+               GPTIMER_CCCTL_01_COC_MASK);
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.CCCTL_01[1],
+               GPTIMER_CCCTL_01_COC_COMPARE,
+               GPTIMER_CCCTL_01_COC_MASK);
+
+    // Configure CCP for output
+    update_reg(&MOTOR_PWM_INST->COMMONREGS.CCPD,
+               GPTIMER_CCPD_C0CCP0_OUTPUT |
+               GPTIMER_CCPD_C0CCP1_OUTPUT,
+               GPTIMER_CCPD_C0CCP0_MASK |
+               GPTIMER_CCPD_C0CCP1_MASK);
+
+    // Set CCP HIGH on zero and LOW on compare
+    uint32_t ccact_pwm_cfg =
+        GPTIMER_CCACT_01_FENACT_DISABLED |
+        GPTIMER_CCACT_01_CC2UACT_DISABLED |
+        GPTIMER_CCACT_01_CC2DACT_DISABLED |
+        GPTIMER_CCACT_01_CUACT_CCP_LOW |
+        GPTIMER_CCACT_01_CDACT_DISABLED |
+        GPTIMER_CCACT_01_LACT_DISABLED |
+        GPTIMER_CCACT_01_ZACT_CCP_HIGH;
+
+    MOTOR_PWM_INST->COUNTERREGS.CCACT_01[0] = ccact_pwm_cfg;
+    MOTOR_PWM_INST->COUNTERREGS.CCACT_01[1] = ccact_pwm_cfg;
+
+    // Select signal generator output for CCP
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.OCTL_01[0],
+               GPTIMER_OCTL_01_CCPO_FUNCVAL,
+               GPTIMER_OCTL_01_CCPO_MASK);
+
+    // Enable output
+    update_reg(&MOTOR_PWM_INST->COMMONREGS.ODIS,
+               GPTIMER_ODIS_C0CCP0_CCP_OUTPUT_OCTL |
+               (GPTIMER_ODIS_C0CCP1_CCP_OUTPUT_OCTL << GPTIMER_ODIS_C0CCP1_OFS),
+               GPTIMER_ODIS_C0CCP0_MASK |
+               GPTIMER_ODIS_C0CCP1_MASK);
+
+    // Set polarity (active high, low while disabled)
+    update_reg(&MOTOR_PWM_INST->COUNTERREGS.OCTL_01[0],
+               GPTIMER_OCTL_01_CCPIV_LOW |
+               GPTIMER_OCTL_01_CCPOINV_NOINV,
+               GPTIMER_OCTL_01_CCPIV_MASK |
+               GPTIMER_OCTL_01_CCPOINV_MASK);
+
+    // Enable clock
+    MOTOR_PWM_INST->COMMONREGS.CCLKCTL = GPTIMER_CCLKCTL_CLKEN_ENABLED;
+
+    // Start timer
+    MOTOR_PWM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+}
+
+
+
+//-----------------------------------------------------------------------------
+// rc_timer0_init
+//-----------------------------------------------------------------------------
+// Configures the timer used to capture RC pulse widths on three channels
+// sharing a common time base.
+//-----------------------------------------------------------------------------
+void rc_timer0_init(void)
+{
+    // Common 1 MHz up-counter configuration for RC timer 0
+    gptimer_init_1mhz_upcounter(RC_TIM0_INST,
+                                RC_TIM_PRESCALER,
+                                RC_TIM_PERIOD_US);
+
+    // CC0: zero counter on rising edge, no capture stored, direct CCP input
+    gptimer_config_zero_on_rise_cc0(RC_TIM0_INST,
+                                    GPTIMER_INPUT_DIRECT);
+
+    // CC1: capture on falling edge, input-pair mapped to CC0 pin
+    gptimer_config_fall_capture(RC_TIM0_INST,
+                                GPTIMER_CC_IDX_1,
+                                GPTIMER_INPUT_PAIR);
+
+    // CC2: capture on falling edge, direct input
+    gptimer_config_fall_capture(RC_TIM0_INST,
+                                GPTIMER_CC_IDX_2,
+                                GPTIMER_INPUT_DIRECT);
+
+    // CC3: capture on falling edge, direct input
+    gptimer_config_fall_capture(RC_TIM0_INST,
+                                GPTIMER_CC_IDX_3,
+                                GPTIMER_INPUT_DIRECT);
+
+    // Enable interrupts for the three capture channels
+    RC_TIM0_INST->CPU_INT.IMASK |=
+        GPTIMER_CPU_INT_IMASK_CCU1_SET |
+        GPTIMER_CPU_INT_IMASK_CCU2_SET |
+        GPTIMER_CPU_INT_IMASK_CCU3_SET;
+
+    // Enable clock
+    RC_TIM0_INST->COMMONREGS.CCLKCTL = GPTIMER_CCLKCTL_CLKEN_ENABLED;
+
+    // Start timer
+    RC_TIM0_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+}
+
+
+
+//-----------------------------------------------------------------------------
+// rc_timer1_init
+//-----------------------------------------------------------------------------
+// Configures the timer used to capture RC pulse width on a single channel,
+// using CC0 to zero the counter on rising edges and CC1 to capture the
+// corresponding falling edges.
+//-----------------------------------------------------------------------------
+void rc_timer1_init(void)
+{
+    // Common 1 MHz up-counter configuration for RC timer 1
+    gptimer_init_1mhz_upcounter(RC_TIM1_INST,
+                                RC_TIM_PRESCALER,
+                                RC_TIM_PERIOD_US);
+
+    // CC0: zero counter on rising edge, no capture stored, direct CCP input
+    gptimer_config_zero_on_rise_cc0(RC_TIM1_INST,
+                                    GPTIMER_INPUT_DIRECT);
+
+    // CC1: capture on falling edge, input-pair mapped to CC0 pin
+    gptimer_config_fall_capture(RC_TIM1_INST,
+                                GPTIMER_CC_IDX_1,
+                                GPTIMER_INPUT_PAIR);
+
+    // Enable interrupts for CC0 and CC1 capture events
+    RC_TIM1_INST->CPU_INT.IMASK |=
+        GPTIMER_CPU_INT_IMASK_CCU0_SET |
+        GPTIMER_CPU_INT_IMASK_CCU1_SET;
+
+    // Enable clock gate for the timer
+    RC_TIM1_INST->COMMONREGS.CCLKCTL = GPTIMER_CCLKCTL_CLKEN_ENABLED;
+
+    // Start timer (enable counter)
+    RC_TIM1_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 }

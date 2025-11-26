@@ -1,7 +1,22 @@
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
 #include "ti_msp_dl_config.h"
+#include "kyles_kirb-3_config.h"
 #include "kyles_kirb-3.h"
+
+//-----------------------------------------------------------------------------
+// Development Notes (not part of compiled logic)
+//-----------------------------------------------------------------------------
+// Temporary reminders, debugging notes, and reference snippets. This section
+// has no effect on program behavior and may be removed at any time.
+/*
+   Git workflow:
+     git pull
+     git add .
+     git commit -m "message"
+     git push
+
+//-----------------------------------------------------------------------------*/
 
 
 // RC Pulse Width Captures in Microseconds
@@ -10,10 +25,9 @@ volatile uint16_t g_rc_pw_us[RC_CH_COUNT];
 int main(void)
 {
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++) {
-        g_rc_pw_us[idx] = SERVO_NUETRAL_PULSE_WIDTH_US;
+        g_rc_pw_us[idx] = SERVO_NEUTRAL_PULSE_WIDTH_US;
     }
 
-    SYSCFG_DL_init();
     config_init();
 
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
@@ -21,8 +35,8 @@ int main(void)
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
  
     while (1) {
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_LS_Y], MOTOR1_CC_IDX);
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_RS_Y], MOTOR2_CC_IDX);
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
     }
 }
