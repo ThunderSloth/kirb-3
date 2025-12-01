@@ -411,6 +411,26 @@
     [
       "0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a",
       "Root"
+    ],
+    [
+      "b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e",
+      "RC Reciever Interface"
+    ],
+    [
+      "f7853a98-918c-411e-85ae-dd3031adf4af",
+      "LP-MSPM0G3507 Headers"
+    ],
+    [
+      "024070e9-0b5c-4a13-970d-8a980a45ce1f",
+      "Power Distribution System"
+    ],
+    [
+      "e9b55cd3-e9fe-4149-ac8f-4fb25ab6db08",
+      "Motor Drive System"
+    ],
+    [
+      "77c0d970-1b23-4575-bbbf-688279d72764",
+      "Ultrasonic Sensing System"
     ]
   ],
   "text_variables": {}
