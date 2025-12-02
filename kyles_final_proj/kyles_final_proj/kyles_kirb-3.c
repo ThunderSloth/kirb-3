@@ -120,13 +120,6 @@ void SCALE_MOTOR_SPEED(void)
 
     g_rc_pw_us[R_MTR_RC_IN_CH] = mtr_val;
 
-
-
-
-
-
-
-    
 }
 
 
