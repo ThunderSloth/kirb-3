@@ -35,6 +35,7 @@ int main(void)
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
  
     while (1) {
+
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
@@ -91,6 +92,40 @@ void GROUP1_IRQHandler(void)
         g_rc_pw_us[RC_CH_VR_B] = DL_Timer_getTimerCount(g_rc_cfg[RC_CH_VR_B].timer_inst);
         DL_GPIO_clearInterruptStatus(RC_IN_PORT, (g_rc_cfg[RC_CH_VR_B].gpio_pin));
     }
+}
+
+void SCALE_MOTOR_SPEED(void)
+{
+    uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
+    uint16_t mtr_val;
+
+    uint8_t scale_percent = (var_res - 1000)/1000;
+//-----------------------------------------
+    mtr_val = g_rc_pw_us[L_MTR_RC_IN_CH];
+
+    int16_t mtr_diff = mtr_val - 1500;
+    mtr_diff = mtr_diff * scale_percent;
+
+    mtr_val = 1500 + mtr_diff;
+
+    g_rc_pw_us[L_MTR_RC_IN_CH] = mtr_val;
+//-----------------------------------------
+    mtr_val = g_rc_pw_us[R_MTR_RC_IN_CH];
+
+    mtr_diff = mtr_val - 1500;
+    mtr_diff = mtr_diff * scale_percent;
+
+    mtr_val = 1500 + mtr_diff;
+
+    g_rc_pw_us[R_MTR_RC_IN_CH] = mtr_val;
+
+
+
+
+
+
+
+    
 }
 
 

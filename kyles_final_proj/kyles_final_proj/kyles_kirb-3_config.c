@@ -44,7 +44,6 @@
 //-----------------------------------------------------------------------------
 // Local configuration tables (for this module only)
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD
 void config_init(void)
 void power_init(void);
 void GPIO_init(void);
@@ -52,7 +51,6 @@ void clock_init(void);
 void PWM_init(void);
 void RC_timer0_init(void);
 void RC_timer1_init(void);
-=======
 
 static GPIO_Regs *const g_gpio_ports[] = {
     GPIOA,
@@ -68,14 +66,12 @@ static GPTIMER_Regs *const g_gptimers[] = {
 #define NUM_GPIO_PORTS   (sizeof(g_gpio_ports) / sizeof(g_gpio_ports[0]))
 #define NUM_GPTIMERS     (sizeof(g_gptimers) / sizeof(g_gptimers[0]))
 
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 
 
 //-----------------------------------------------------------------------------
 // Local helpers
 //-----------------------------------------------------------------------------
 
-<<<<<<< HEAD
 
 // GPIO_init() constants
 //------------------------------------------------------------------------------
@@ -183,14 +179,12 @@ static GPTIMER_Regs *const g_gptimers[] = {
 /*
 
 SYSCONFIG_WEAK void SYSCFG_DL_init(void)
-=======
 // Common 1 MHz up-counter configuration for all GPTIMER instances used here.
 // Assumes a 32 MHz system bus clock and uses CC0 to define
 // zero/advance/load behavior.
 static void gptimer_init_1mhz_upcounter(GPTIMER_Regs *timer,
                                         uint32_t prescaler,
                                         uint32_t period_us)
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 {
     // Select bus clock as source
     timer->CLKSEL =
@@ -376,7 +370,6 @@ static void gptimer_config_fall_capture(GPTIMER_Regs    *timer,
 void config_init(void)
 {
     power_init();
-<<<<<<< HEAD
     GPIO_init();
     PWM_init();
     clock_init();
@@ -384,13 +377,11 @@ void config_init(void)
     RC_timer1_init();
 
 
-=======
     gpio_init();
     sys_clock_init();
     pwm_init();
     rc_timer0_init();
     rc_timer1_init();
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 }
 
 
@@ -438,7 +429,6 @@ void power_init(void)
             GPTIMER_PWREN_ENABLE_ENABLE;
     }
 
-<<<<<<< HEAD
     //Configure pin PB13 as a GPIO input
   /* GPIO functionality is always a pin function of 0x00000001 */
   IOMUX->SECCFG.PINCM[RC_IN_CH5_IOMUX] =
@@ -470,10 +460,8 @@ void power_init(void)
 
 
 
-=======
     // Allow peripherals time to come out of reset before configuration
     clock_delay(PWR_EN_DELAY_MS);
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 }
 
 
@@ -496,7 +484,6 @@ void gpio_init(void)
     for (uint32_t idx = 0; idx < MOTOR_COUNT; idx++) {
         const MtrConfig *motor_cfg = &g_mtr_cfg[idx];
 
-<<<<<<< HEAD
   //Sets BOR threshold at minimum level (does not activate)
   SYSCTL->SOCLOCK.BORTHRESHOLD = (uint32_t) SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
   //Sets the system oscillator to 32MHz
@@ -510,11 +497,9 @@ void gpio_init(void)
   //Disable main clock divider 
   updateReg(&SYSCTL->SOCLOCK.MCLKCFG, (uint32_t) DL_SYSCTL_MCLK_DIVIDER_DISABLE,
         SYSCTL_MCLKCFG_MDIV_MASK);
-=======
         IOMUX->SECCFG.PINCM[motor_cfg->iomux_pincm] =
             motor_cfg->iomux_func |
             IOMUX_PINCM_PC_CONNECTED;
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 
         motor_cfg->gpio_port->DOESET31_0 = motor_cfg->gpio_pin;
     }
@@ -563,7 +548,6 @@ void gpio_init(void)
         RC_IN_PORT->CPU_INT.IMASK |= rc_gpio_mask;
     }
 
-<<<<<<< HEAD
   // Set timer compare value
   TIMA0->COUNTERREGS.CC_23[1] = GPTIMER_CC_23_CCVAL_MASK & compare_value;
 
@@ -716,11 +700,9 @@ void RC_timer0_init(void)
 		DL_TIMERA_INTERRUPT_CC3_UP_EVENT);
 
     DL_TimerA_enableClock(RC_TIM0_INST);
-=======
     // Set interrupt polarity for GPIO pins (falling edge)
     RC_IN_PORT->POLARITY15_0  |= GPIO_POLARITY15_0_DIO13_FALL;
     RC_IN_PORT->POLARITY31_16 |= GPIO_POLARITY31_16_DIO20_FALL;
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 }
 
 
@@ -739,16 +721,13 @@ void RC_timer0_init(void)
 //-----------------------------------------------------------------------------
 void sys_clock_init(void)
 {
-<<<<<<< HEAD
   RC_TIM1_INST->CLKSEL = (uint32_t)(TIMER_CLOCK_BUSCLK);
 
   RC_TIM1_INST->CLKDIV = (uint32_t)(DL_TIMER_CLOCK_DIVIDE_1);
 
   RC_TIM1_INST->COMMONREGS.CPS = (TIM1_PRESCALE);    
-=======
     // Set brown-out reset threshold to minimum sensitivity
     SYSCTL->SOCLOCK.BORTHRESHOLD = SYSCTL_BORTHRESHOLD_LEVEL_BORMIN;
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 
     // Configure system oscillator to 32 MHz base frequency
     update_reg(&SYSCTL->SOCLOCK.SYSOSCCFG,
@@ -771,7 +750,6 @@ void sys_clock_init(void)
 
 
 
-<<<<<<< HEAD
 
 
 
@@ -788,7 +766,6 @@ void sys_clock_init(void)
 
 //Writes value to specified register - retaining bits unaffected by mask
  void updateReg(volatile uint32_t *reg, uint32_t value, uint32_t mask)
-=======
 //-----------------------------------------------------------------------------
 // pwm_init
 //-----------------------------------------------------------------------------
@@ -805,7 +782,6 @@ void sys_clock_init(void)
 // widths on the assigned output channels.
 //-----------------------------------------------------------------------------
 void pwm_init(void)
->>>>>>> 0bb97f76cdb1ed72f1b0e9c9f68f94a5dc25c093
 {
     // Common 1 MHz up-counter configuration for the PWM timer
     gptimer_init_1mhz_upcounter(MOTOR_PWM_INST,
