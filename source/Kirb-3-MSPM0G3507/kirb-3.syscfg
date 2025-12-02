@@ -47,7 +47,6 @@ const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
 
 CAPTURE1.captureInputMode                   = "multi";
 CAPTURE1.timerClkPrescale                   = 32;
-CAPTURE1.timerStartTimer                    = true;
 CAPTURE1.ccIndexMulti                       = [0,1,2,3];
 CAPTURE1.multi_countMode                    = "DL_TIMER_COUNT_MODE_UP";
 CAPTURE1.multi_countRep                     = "DL_TIMER_REPEAT_MODE_ENABLED";

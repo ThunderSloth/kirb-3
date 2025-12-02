@@ -18,6 +18,15 @@
                 "name": "kyles_final_proj",
                 "resourceId": "/kyles_final_proj/kyles_kirb-3_config.c"
             }
+        },
+        {
+            "name": "kyles_final_proj (2)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "kyles_final_proj",
+                "resourceId": "/kyles_final_proj/kyles_kirb-3_config.h"
+            }
         }
     ]
 }

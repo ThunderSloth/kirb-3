@@ -370,6 +370,7 @@ static void gptimer_config_fall_capture(GPTIMER_Regs    *timer,
 void config_init(void)
 {
     power_init();
+<<<<<<< HEAD
     GPIO_init();
     PWM_init();
     clock_init();
@@ -378,10 +379,16 @@ void config_init(void)
 
 
     gpio_init();
+=======
+    //gpio_init();
+    SYSCFG_DL_GPIO_init();    
+>>>>>>> 2c81df2314f43a563502db5da083e329c17ae5ee
     sys_clock_init();
     pwm_init();
     rc_timer0_init();
     rc_timer1_init();
+    echo_tim_init();
+    trig_tim_init();
 }
 
 
@@ -936,4 +943,84 @@ void rc_timer1_init(void)
 
     // Start timer (enable counter)
     RC_TIM1_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
+}
+
+//-----------------------------------------------------------------------------
+// echo_tim_init
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+/*
+ * Timer clock configuration to be sourced by BUSCLK /  (32000000 Hz)
+ * timerClkFreq = (timerClkSrc / (timerClkDivRatio * (timerClkPrescale + 1)))
+ *   32000000 Hz = 32000000 Hz / (1 * (0 + 1))
+ */
+static const DL_TimerG_ClockConfig gECHO_TIMClockConfig = {
+    .clockSel    = DL_TIMER_CLOCK_BUSCLK,
+    .divideRatio = DL_TIMER_CLOCK_DIVIDE_1,
+    .prescale = 0U
+};
+
+/*
+ * Timer load value (where the counter starts from) is calculated as (timerPeriod * timerClockFreq) - 1
+ * ECHO_TIM_INST_LOAD_VALUE = (0 ms * 32000000 Hz) - 1
+ */
+static const DL_TimerG_CaptureConfig gECHO_TIMCaptureConfig = {
+    .captureMode    = DL_TIMER_CAPTURE_MODE_EDGE_TIME,
+    .period         = ECHO_TIM_INST_LOAD_VALUE,
+    .startTimer     = DL_TIMER_STOP,
+    .edgeCaptMode   = DL_TIMER_CAPTURE_EDGE_DETECTION_MODE_RISING,
+    .inputChan      = DL_TIMER_INPUT_CHAN_0,
+    .inputInvMode   = DL_TIMER_CC_INPUT_INV_NOINVERT,
+};
+
+void echo_tim_init(void) {
+
+    DL_TimerG_setClockConfig(ECHO_TIM_INST,
+        (DL_TimerG_ClockConfig *) &gECHO_TIMClockConfig);
+
+    DL_TimerG_initCaptureMode(ECHO_TIM_INST,
+        (DL_TimerG_CaptureConfig *) &gECHO_TIMCaptureConfig);
+    DL_TimerG_enableClock(ECHO_TIM_INST);
+
+}
+
+//-----------------------------------------------------------------------------
+// trig_tim_init
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+/*
+ * Timer clock configuration to be sourced by BUSCLK /  (32000000 Hz)
+ * timerClkFreq = (timerClkSrc / (timerClkDivRatio * (timerClkPrescale + 1)))
+ *   1000000 Hz = 32000000 Hz / (1 * (31 + 1))
+ */
+static const DL_TimerG_ClockConfig gTRIG_TIMClockConfig = {
+    .clockSel    = DL_TIMER_CLOCK_BUSCLK,
+    .divideRatio = DL_TIMER_CLOCK_DIVIDE_1,
+    .prescale    = 31U,
+};
+
+/*
+ * Timer load value (where the counter starts from) is calculated as (timerPeriod * timerClockFreq) - 1
+ * TRIG_TIM_INST_LOAD_VALUE = (20 ms * 1000000 Hz) - 1
+ */
+static const DL_TimerG_TimerConfig gTRIG_TIMTimerConfig = {
+    .period     = TRIG_TIM_INST_LOAD_VALUE,
+    .timerMode  = DL_TIMER_TIMER_MODE_PERIODIC_UP,
+    .startTimer = DL_TIMER_STOP,
+};
+
+void trig_tim_init(void) {
+
+    DL_TimerG_setClockConfig(TRIG_TIM_INST,
+        (DL_TimerG_ClockConfig *) &gTRIG_TIMClockConfig);
+
+    DL_TimerG_initTimerMode(TRIG_TIM_INST,
+        (DL_TimerG_TimerConfig *) &gTRIG_TIMTimerConfig);
+    DL_TimerG_enableInterrupt(TRIG_TIM_INST , DL_TIMERG_INTERRUPT_CC0_UP_EVENT |
+		DL_TIMERG_INTERRUPT_LOAD_EVENT |
+		DL_TIMERG_INTERRUPT_ZERO_EVENT);
+    DL_TimerG_enableClock(TRIG_TIM_INST);
+
 }

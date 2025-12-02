@@ -20,8 +20,8 @@ int main(void)
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
  
     while (1) {
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_LS_Y], MOTOR1_CC_IDX);
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_RS_Y], MOTOR2_CC_IDX);
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_VR_A], MOTOR1_CC_IDX);
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[RC_CH_VR_B], MOTOR2_CC_IDX);
         __NOP();
     }
 }
