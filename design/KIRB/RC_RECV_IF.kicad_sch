@@ -2106,7 +2106,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "198739b5-d94b-4880-b839-c352e2029467")
-		(property "Reference" "#PWR043"
+		(property "Reference" "#PWR04"
 			(at 116.84 83.82 0)
 			(effects
 				(font
@@ -2156,7 +2156,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR043")
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -2171,7 +2171,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "326edbc2-f274-41e7-9ab5-f62927829260")
-		(property "Reference" "#PWR045"
+		(property "Reference" "#PWR01"
 			(at 134.62 68.58 0)
 			(effects
 				(font
@@ -2221,7 +2221,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR045")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -2236,7 +2236,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "3b7472a3-04a6-42d7-af49-23fc63cc7ff1")
-		(property "Reference" "#PWR044"
+		(property "Reference" "#PWR02"
 			(at 121.92 74.93 0)
 			(effects
 				(font
@@ -2286,7 +2286,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR044")
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -2301,7 +2301,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "52e665e3-883f-4738-84b4-59f3f9eb8c9a")
-		(property "Reference" "U13"
+		(property "Reference" "U1"
 			(at 82.55 76.708 0)
 			(effects
 				(font
@@ -2373,7 +2373,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "U13")
+					(reference "U1")
 					(unit 1)
 				)
 			)
@@ -2388,7 +2388,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "6be44b4f-70c4-4e50-a7c3-f46a3628fdcb")
-		(property "Reference" "#PWR042"
+		(property "Reference" "#PWR06"
 			(at 99.06 85.09 0)
 			(effects
 				(font
@@ -2438,7 +2438,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR042")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -2453,7 +2453,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "72c6743f-249a-483b-ba92-8e1984fb7442")
-		(property "Reference" "C6"
+		(property "Reference" "C1"
 			(at 128.016 61.214 90)
 			(effects
 				(font
@@ -2507,7 +2507,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "C6")
+					(reference "C1")
 					(unit 1)
 				)
 			)
@@ -2522,7 +2522,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "753cdf76-a013-4acc-9794-03d64851f98a")
-		(property "Reference" "#PWR041"
+		(property "Reference" "#PWR03"
 			(at 92.71 77.47 0)
 			(effects
 				(font
@@ -2572,7 +2572,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR041")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -2587,7 +2587,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "95865251-f1a2-40c3-afbf-4999f5970c14")
-		(property "Reference" "#PWR047"
+		(property "Reference" "#PWR05"
 			(at 152.4 90.17 0)
 			(effects
 				(font
@@ -2637,7 +2637,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR047")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -2652,7 +2652,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "a260f233-58ad-4038-a447-5a6276abe05b")
-		(property "Reference" "U14"
+		(property "Reference" "U2"
 			(at 137.16 73.406 0)
 			(effects
 				(font
@@ -2760,7 +2760,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "U14")
+					(reference "U2")
 					(unit 1)
 				)
 			)
@@ -2775,7 +2775,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "cf05f3f4-6bf6-46cc-b94e-ffd3641e7c3b")
-		(property "Reference" "R13"
+		(property "Reference" "R1"
 			(at 128.27 112.268 90)
 			(effects
 				(font
@@ -2827,7 +2827,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "R13")
+					(reference "R1")
 					(unit 1)
 				)
 			)
@@ -2842,7 +2842,7 @@
 		(on_board yes)
 		(dnp no)
 		(uuid "f1ee2c7c-d762-42ed-af9b-ac6a1e53dfd1")
-		(property "Reference" "#PWR046"
+		(property "Reference" "#PWR07"
 			(at 134.62 128.27 0)
 			(effects
 				(font
@@ -2892,7 +2892,7 @@
 		(instances
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/b22f0d18-4d91-4b8e-a8f8-7677d2a7d09e"
-					(reference "#PWR046")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)

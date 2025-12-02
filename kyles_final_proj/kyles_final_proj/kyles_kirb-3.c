@@ -21,6 +21,7 @@
 
 // RC Pulse Width Captures in Microseconds
 volatile uint16_t g_rc_pw_us[RC_CH_COUNT];
+//volatile uint16_t g_ult_pw_us[ULT_COUNT];
 
 int main(void)
 {
