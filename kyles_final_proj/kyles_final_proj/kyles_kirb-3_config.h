@@ -64,6 +64,8 @@ void sys_clock_init(void);
 void pwm_init(void);
 void rc_timer0_init(void);
 void rc_timer1_init(void);
+void echo_tim_init(void);
+void trig_tim_init(void);
 
 
 //-----------------------------------------------------------------------------
