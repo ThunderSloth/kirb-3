@@ -93,5 +93,33 @@ void GROUP1_IRQHandler(void)
     }
 }
 
+void SysTick_Handler(void)
+{
+  static uint16_t delay_time = 1;
 
+  delay_time--;
+  if (delay_time == 0)
+  {
+    //delay time has expired so now move on to next letter to display
+
+    //get next delay time
+    delay_time = delay_count[code_index];
+    code_index++;
+
+    
+  } /*if*/
+}
+
+
+//Buzzer on PB15
+void check_for_reverse(void)
+{
+  uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
+  uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
+
+  if (rs_y_value < 1500 && ls_y_value < 1500)
+  {
+    //Send PWM signal
+  }
+}
 
