@@ -1,0 +1,36 @@
+# --- Line endings: use LF everywhere ---
+* text eol=lf
+
+# --- Windows CRLF exceptions (if you ever need them) ---
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# --- Binary files (prevent line-ending normalization) ---
+*.pdf  binary
+*.docx binary
+*.zip  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.step binary
+*.bin  binary
+*.hex  binary
+
+# --- KiCad files: treat as text but don't mess with format ---
+*.kicad_sch text eol=lf
+*.kicad_pcb text eol=lf
+*.pro       text eol=lf
+*.json      text eol=lf
+
+# --- Code files ---
+*.c     text eol=lf
+*.h     text eol=lf
+*.syscfg text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+
+# Prevent Git from trying pointless merge conflict markers in binary files
+*.pdf merge=ours
+*.docx merge=ours
+*.zip  merge=ours
+
