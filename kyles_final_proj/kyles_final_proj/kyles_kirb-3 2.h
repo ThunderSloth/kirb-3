@@ -6,15 +6,7 @@
 #include <ti/driverlib/m0p/dl_core.h>
 #include "ti_msp_dl_config.h"
 
-// -----------------------------------------------------------------------------
-// Function Initialization
-// -----------------------------------------------------------------------------
-void check_for_reverse(void);
 #define NON_APPLICABLE ((uint32_t)0xFFFFFFFFu)
-
-
-
-// =============================================================================
 
 // GPIO functionality is always a pin function of 0x00000001
 #define IOMUX_PINCM_FUNCSEL_GPIO (1u)
@@ -23,11 +15,6 @@ void check_for_reverse(void);
 #define SERVO_MIN_PULSE_WIDTH_US          (1000u)
 #define SERVO_NEUTRAL_PULSE_WIDTH_US      (1500u)
 #define SERVO_MAX_PULSE_WIDTH_US          (2000u)
-
-//SysTick initialization constants
-#define MSPM0_CLOCK_FREQUENCY                                       (40E6)
-#define SYST_TICK_PERIOD                                        (10.25E-3)
-#define SYST_TICK_PERIOD_COUNT  (SYST_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
 
 // -----------------------------------------------------------------------------
 // RC Channel Indices and Logical Aliases
@@ -181,7 +168,7 @@ static const MtrConfig g_mtr_cfg[MOTOR_COUNT] = {
 #define L_MTR_RC_IN_CH   (g_mtr_cfg[L_MTR_IDX].rc_in_ch)
 #define R_MTR_RC_IN_CH   (g_mtr_cfg[R_MTR_IDX].rc_in_ch)
 
-
+// -----------------------------------------------------------------------------
 // Ultrasonic Distance Sensor Configuration
 // -----------------------------------------------------------------------------
 #define PING_PIN       (PING_TRIG_PIN)

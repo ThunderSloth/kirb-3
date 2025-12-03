@@ -44,11 +44,6 @@
 #define RC_TIM_PRESCALER        (PRESCALER_32MHZ_TO_1US)
 #define RC_TIM_PERIOD_US        (MAX_PCOUNT_16BIT_TIM)
 
-//SysTick initialization constants
-#define MSPM0_CLOCK_FREQUENCY                                       (40E6)
-#define SYS_TICK_PERIOD                                        (10.25E-3)
-#define SYS_TICK_PERIOD_COUNT  (SYST_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
-
 //-----------------------------------------------------------------------------
 // Type Definitions
 //-----------------------------------------------------------------------------

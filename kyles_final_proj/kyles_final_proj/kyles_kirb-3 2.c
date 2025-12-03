@@ -29,8 +29,6 @@ volatile uint16_t g_ult_pw_us[ULT_COUNT];
 // Sensor Index
 volatile uint8_t g_ult_idx = 0;
 
-bool g_ignore_systick = true;
-
 int main(void)
 {
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++) {
@@ -46,7 +44,6 @@ int main(void)
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
  
     while (1) {
-
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
@@ -104,63 +101,6 @@ void GROUP1_IRQHandler(void)
         DL_GPIO_clearInterruptStatus(RC_IN_PORT, (g_rc_cfg[RC_CH_VR_B].gpio_pin));
     }
 }
-
-void SysTick_Handler(void)
-{
-  static uint16_t delay_time = 1;
-  
-  static bool is_buzzing = false;
-  
-  if (g_ignore_systick == false){
-    delay_time--;
-    if (delay_time == 0)
-    {
-      if (is_buzzing == false)  //If statement for toggling the buzzer
-      {
-        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO13_MASK;
-        is_buzzing = true;      
-      }
-      else 
-      {
-        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO13_MASK;
-        is_buzzing = false;
-      }
-      
-      delay_time = 100;        //May need to adjust delay time when testing
-      
-    } /*if*/
-  }
-}
-
-
-void SCALE_MOTOR_SPEED(void)
-{
-    uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
-    uint16_t mtr_val;
-
-    uint8_t scale_percent = (var_res - 1000)/1000;
-//-----------------------------------------
-    mtr_val = g_rc_pw_us[L_MTR_RC_IN_CH];
-
-    int16_t mtr_diff = mtr_val - 1500;
-    mtr_diff = mtr_diff * scale_percent;
-
-    mtr_val = 1500 + mtr_diff;
-
-    g_rc_pw_us[L_MTR_RC_IN_CH] = mtr_val;
-//-----------------------------------------
-    mtr_val = g_rc_pw_us[R_MTR_RC_IN_CH];
-
-    mtr_diff = mtr_val - 1500;
-    mtr_diff = mtr_diff * scale_percent;
-
-    mtr_val = 1500 + mtr_diff;
-
-    g_rc_pw_us[R_MTR_RC_IN_CH] = mtr_val;
-
-
-}
-
 
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
@@ -220,22 +160,5 @@ void ULT_ECHO_TIM_INST_IRQHandler(void)
         default:
             return;
     }
-}
-
-//Need to add to main loop
-void check_for_reverse(void)
-{
-  //Variables to hold the volatile RC data
-  uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
-  uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
-
-  if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
-  {
-    g_ignore_systick = false;
-  }
-  else 
-  {
-    g_ignore_systick = true;
-  }
 }
 

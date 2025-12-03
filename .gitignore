@@ -41,9 +41,16 @@
 *.su
 *.idb
 *.pdb
+
+# CCS / build directories
 Debug/
 **/Debug/
-*.dwo
+**/Debug\ copy/
+
+# Clangd cache (keep .clangd config files, ignore dirs)
+**/.clangd/
+**/.cache/
+compile_commands.json
 
 # Kernel Module Compile Results
 *.mod*
@@ -60,5 +67,45 @@ dkms.conf
 # Affinity 
 *.afdesign~lock~
 
+# KiCad
+# Project-local settings and automatic backups you don't need in Git
+*.kicad_prl
+*-bak
+*~backup*
+*backup*
+*autosave*
+*-backups/
+**/KIRB-backups/
 
+# STEP / mechanical CAD intermediate exports (optional)
+# Comment these out if you want to version the STEP files
+# *.step
+# *.stp
 
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.bbl
+*.blg
+*.run.xml
+
+# LaTeX build directory
+doc/src/build/
+
+# Editor / IDE junk
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Misc generated artifacts in this repo
+filelist.txt
