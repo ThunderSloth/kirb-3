@@ -22,6 +22,8 @@
 // RC Pulse Width Captures in Microseconds
 volatile uint16_t g_rc_pw_us[RC_CH_COUNT];
 //volatile uint16_t g_ult_pw_us[ULT_COUNT];
+//
+bool g_ignore_systick = true;
 
 int main(void)
 {
@@ -97,30 +99,44 @@ void GROUP1_IRQHandler(void)
 void SysTick_Handler(void)
 {
   static uint16_t delay_time = 1;
-
-  delay_time--;
-  if (delay_time == 0)
-  {
-    //delay time has expired so now move on to next letter to display
-
-    //get next delay time
-    delay_time = delay_count[code_index];
-    code_index++;
-
-    
-  } /*if*/
+  
+  static bool is_buzzing = false;
+  
+  if (g_ignore_systick == false){
+    delay_time--;
+    if (delay_time == 0)
+    {
+      if (is_buzzing == false)  //If statment for toggling the buzzer
+      {
+        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO13_MASK;
+        is_buzzing = true;      
+      }
+      else 
+      {
+        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO13_MASK;
+        is_buzzing = false;
+      }
+      
+      delay_time = 100;        //May need to adjust delay time when testing
+      
+    } /*if*/
+  }
 }
 
-
-//Buzzer on PB15
+//Need to add to main loop
 void check_for_reverse(void)
 {
+  //Variables to hold the volitile rc data
   uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
   uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
 
-  if (rs_y_value < 1500 && ls_y_value < 1500)
+  if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
   {
-    //Send PWM signal
+    g_ignore_systick = false;
+  }
+  else 
+  {
+    g_ignore_systick = true;
   }
 }
 

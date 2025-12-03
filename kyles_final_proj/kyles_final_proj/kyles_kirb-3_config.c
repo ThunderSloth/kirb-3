@@ -264,6 +264,7 @@ void config_init(void)
     rc_timer1_init();
     echo_tim_init();
     trig_tim_init();
+    sys_tick_init(SYS_TICK_PERIOD_COUNT);
 }
 
 
@@ -385,6 +386,12 @@ void gpio_init(void)
         RC_IN_PORT->CPU_INT.ICLR  |= rc_gpio_mask;
         RC_IN_PORT->CPU_INT.IMASK |= rc_gpio_mask;
     }
+
+    //Configure IOMUX function and enable output for PB13 (Buzzer) 
+    IOMUX->SECCFG.PINCM[SENS_BUZ_IOMUX] = IOMUX_PINCM_PC_CONNECTED |
+                                          IOMUX_PINCM30_PF_GPIOB_DIO13;
+
+    GPIOB->DOE31_0 |= GPIO_DOE31_0_DIO13_ENABLE;
 
     // Set interrupt polarity for GPIO pins (falling edge)
     RC_IN_PORT->POLARITY15_0  |= GPIO_POLARITY15_0_DIO13_FALL;

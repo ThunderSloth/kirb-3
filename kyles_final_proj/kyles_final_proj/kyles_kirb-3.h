@@ -16,6 +16,11 @@
 #define SERVO_NEUTRAL_PULSE_WIDTH_US      (1500u)
 #define SERVO_MAX_PULSE_WIDTH_US          (2000u)
 
+//SysTick initialization constants
+#define MSPM0_CLOCK_FREQUENCY                                       (40E6)
+#define SYST_TICK_PERIOD                                        (10.25E-3)
+#define SYST_TICK_PERIOD_COUNT  (SYST_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
+
 // -----------------------------------------------------------------------------
 // RC channel indices and logical aliases
 // -----------------------------------------------------------------------------
@@ -167,6 +172,12 @@ static const MtrConfig g_mtr_cfg[MOTOR_COUNT] = {
 
 #define L_MTR_RC_IN_CH   (g_mtr_cfg[L_MTR_IDX].rc_in_ch)
 #define R_MTR_RC_IN_CH   (g_mtr_cfg[R_MTR_IDX].rc_in_ch)
+
+// -----------------------------------------------------------------------------
+// Function Initialization
+// -----------------------------------------------------------------------------
+void check_for_reverse(void);
+
 
 #endif // KIRB_H_
 
