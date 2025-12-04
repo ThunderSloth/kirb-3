@@ -312,6 +312,6 @@ void check_for_reverse(void)
   {
     //Force output low when not reversing
     GPIOB->DOUT31_0 = GPIO_DOUT31_0_DIO13_MASK;
-    g_ignore_buzzer = true;
+    g_disable_buzzer = true;
   }
 }

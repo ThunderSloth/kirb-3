@@ -38,9 +38,6 @@ void set_drive_straight(void);
 // -----------------------------------------------------------------------------
 // RC Channel Indices and Logical Aliases
 // -----------------------------------------------------------------------------
-typedef enum {
-      
-}
 
 
 typedef enum {
@@ -146,8 +143,6 @@ static const RcChannelConfig g_rc_cfg[RC_CH_COUNT] = {
 // -----------------------------------------------------------------------------
 // Motor Configuration
 // -----------------------------------------------------------------------------
-
-typedef enum
 
 typedef enum {
     MOTOR1_IDX,
