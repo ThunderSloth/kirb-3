@@ -1,3 +1,4 @@
+#include "ti/devices/msp/peripherals/hw_gpio.h"
 #include "ti/devices/msp/peripherals/hw_gptimer.h"
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
@@ -165,45 +166,91 @@ void SCALE_MOTOR_SPEED(void)
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
     switch (DL_Timer_getPendingInterrupt(ULT_SCHED_TIM_INST)) {
-        case DL_TIMER_INTERRUPT_ZERO_EVENT:
-
+        case DL_TIMER_IIDX_ZERO: 
+        {
             // Disable Echo Timer
-            ULT_SCHED_TIM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_DISABLED;
+            ULT_ECHO_TIM_INST->COUNTERREGS.CTRCTL &= ~(GPTIMER_CTRCTL_EN_ENABLED);
 
             // Disable Ping IO output driver
             PING_PORT->DOECLR31_0 = PING_PIN;
-            // // Route Ping IO pin to trigger mode (GPIO output)
+            // Route Ping IO pin to trigger mode (GPIO output)
             IOMUX->SECCFG.PINCM[PING_PINCM] = PING_TRIG_FUNC;
 
+            // Disable both Mux
+            for (uint8_t mux_idx = 0; mux_idx < MUX_COUNT; mux_idx++) {
+                
+                const MuxEnConfig *cfg = &g_mux_en_cfg[mux_idx];
+
+                GPIO_Regs *port = cfg->gpio_port;
+                uint32_t   pin  = cfg->gpio_pin;
+
+                port->DOUTCLR31_0 = pin;
+            }
+
             // Determine branch and channel for Sensor Index
+            uint8_t branch = g_ult_idx % ULTS_PER_MUX;
+            uint8_t channel = g_ult_idx / ULTS_PER_MUX;
 
             // Set Mux channel-select lines
+            for (uint8_t sel_idx = 0; sel_idx < MUX_SEL_COUNT; sel_idx++) {
+
+                const MuxSelConfig *cfg = &g_mux_sel_cfg[sel_idx];
+
+                GPIO_Regs *port = cfg->gpio_port;
+                uint32_t   pin  = cfg->gpio_pin;
+
+                bool bit = (channel >> sel_idx) & 1;
+
+                if (bit) {
+                    port->DOUTSET31_0 = pin;
+                } else {
+                    port->DOUTCLR31_0 = pin;
+                }
+            }
 
             // Set Buffer direction to output
+            BUF_PORT->DOUTSET31_0 = BUF_DIR_PIN;
 
             // Enable selected Mux branch
+            const MuxEnConfig *mux = &g_mux_en_cfg[branch];
+
+            GPIO_Regs *mux_port = mux->gpio_port;
+            uint32_t   mux_pin  = mux->gpio_pin;
+
+            mux_port->DOUTSET31_0 = mux_pin;
 
             // Set Ping IO output level HIGH
-
+            PING_PORT->DOUTSET31_0 = PING_PIN;
             // Enable Ping IO output driver
+            PING_PORT->DOESET31_0 = PING_PIN;
 
             break;
-        case DL_TIMER_INTERRUPT_CC0_UP_EVENT:
+        }
+        case DL_TIMER_IIDX_CC0_UP:
+        {
+            // Set PING IO Output Level LOW
+            PING_PORT->DOUTCLR31_0 = PING_PIN;
             // Disable Ping IO output driver
+            PING_PORT->DOECLR31_0 = PING_PIN;
 
             // Route Ping IO pin to Echo Timer input capture (CC0 & CC1)
+            IOMUX->SECCFG.PINCM[PING_PINCM] = PING_ECHO_FUNC;
 
             // Set Buffer direction to input
-
+            BUF_PORT->DOUTCLR31_0 = BUF_DIR_PIN;
             // Enable Echo Timer
+            ULT_ECHO_TIM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 
             break;
-        case DL_TIMER_INTERRUPT_LOAD_EVENT:
+        }
+        case DL_TIMER_IIDX_LOAD:
+        {
             // Advance Sensor Index
             if (++g_ult_idx >= ULT_COUNT) {
                 g_ult_idx = 0;
             }
             break;
+        }
         default:
             return;
     }
@@ -212,10 +259,12 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
     switch (DL_Timer_getPendingInterrupt(ULT_ECHO_TIM_INST)) {
-        case DL_TIMER_INTERRUPT_CC1_UP_EVENT:
+        case DL_TIMER_IIDX_CC1_UP:
             // Store CC1 capture as pulse width for current sensor
-
+            g_ult_pw_us[g_ult_idx] = DL_Timer_getCaptureCompareValue(
+                ULT_ECHO_TIM_INST,  DL_TIMER_CC_1_INDEX);
             // Disable Echo Timer
+            ULT_ECHO_TIM_INST->COUNTERREGS.CTRCTL &= ~(GPTIMER_CTRCTL_EN_ENABLED);
             break;
         default:
             return;
