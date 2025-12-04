@@ -132,33 +132,42 @@ void SysTick_Handler(void)
   }
 }
 
-
+//Scales the motor speed based on variable resistor input from remote controll
 void scale_motor_speed(void)
 {
     uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
     uint16_t mtr_val;
 
-    uint8_t scale_percent = (var_res - 1000)/1000;
+    uint8_t scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
 //-----------------------------------------
     mtr_val = g_rc_pw_us[L_MTR_RC_IN_CH];
 
-    int16_t mtr_diff = mtr_val - 1500;
+    int16_t mtr_diff = mtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
     mtr_diff = mtr_diff * scale_percent;
 
-    mtr_val = 1500 + mtr_diff;
+    mtr_val = SERVO_NEUTRAL_PULSE_WIDTH_US + mtr_diff;
 
     g_rc_pw_us[L_MTR_RC_IN_CH] = mtr_val;
 //-----------------------------------------
     mtr_val = g_rc_pw_us[R_MTR_RC_IN_CH];
 
-    mtr_diff = mtr_val - 1500;
+    mtr_diff = mtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
     mtr_diff = mtr_diff * scale_percent;
 
-    mtr_val = 1500 + mtr_diff;
+    mtr_val = SERVO_NEUTRAL_PULSE_WIDTH_US + mtr_diff;
 
     g_rc_pw_us[R_MTR_RC_IN_CH] = mtr_val;
+}
 
 
+// Checks if motor values are within a sertain range of each other and sets the Left value to the Right if they are
+// This will make it easier to drive in a straight line
+void set_drive_straight(void)
+{
+    if (g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] > -50u & g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] < 50u)
+    {
+        g_rc_pw_us[L_MTR_RC_IN_CH] = g_rc_pw_us[R_MTR_RC_IN_CH];
+    }
 }
 
 
