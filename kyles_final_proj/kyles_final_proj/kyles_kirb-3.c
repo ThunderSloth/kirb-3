@@ -32,8 +32,7 @@ volatile uint16_t g_ult_pw_us[ULT_COUNT];
 // Sensor Index
 volatile uint8_t g_ult_idx = 0;
 
-//Flag for enabling backup buzzer
-bool g_disable_buzzer = true;
+bool g_ignore_systick = true;
 
 int main(void)
 {
@@ -55,8 +54,8 @@ int main(void)
     while (1) {
         set_drive_straight();
         scale_motor_speed();
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
+        setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
+        setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
         msec_delay(10);
         if (count++ <= 10000){
@@ -72,7 +71,7 @@ int main(void)
 void RC_TIM0_INST_IRQHandler (void)
 {
     RcIndex chan;
-    switch (DL_Timer_getPendingInterrupt(RC_TIM0_INST)) {
+    switch (getPendingInterrupt(RC_TIM0_INST)) {
         case g_rc_cfg[RC_CH_LS_X].irq_event:
             chan = RC_CH_LS_X;
             break;
@@ -87,7 +86,7 @@ void RC_TIM0_INST_IRQHandler (void)
     }
     const RcChannelConfig *cfg = &g_rc_cfg[chan];
 
-    g_rc_pw_us[chan] = DL_Timer_getCaptureCompareValue(
+    g_rc_pw_us[chan] = getCaptureCompareValue(
         (GPTIMER_Regs *)cfg->timer_inst,
         cfg->timer_cc
     );
@@ -95,9 +94,9 @@ void RC_TIM0_INST_IRQHandler (void)
 
 void RC_TIM1_INST_IRQHandler (void)
 {
-    switch (DL_Timer_getPendingInterrupt(RC_TIM1_INST)) {
+    switch (getPendingInterrupt(RC_TIM1_INST)) {
         case g_rc_cfg[RC_CH_RS_X].irq_event:
-            g_rc_pw_us[RC_CH_RS_X] = DL_Timer_getCaptureCompareValue(
+            g_rc_pw_us[RC_CH_RS_X] = getCaptureCompareValue(
                 (GPTIMER_Regs *)g_rc_cfg[RC_CH_RS_X].timer_inst,
                  g_rc_cfg[RC_CH_RS_X].timer_cc);
             break;
@@ -127,18 +126,18 @@ void SysTick_Handler(void)
   
   static bool is_buzzing = false;
   
-  if (g_disable_buzzer == false){
+  if (g_ignore_systick == false){
     delay_time--;
     if (delay_time == 0)
     {
       if (is_buzzing == false)  //If statement for toggling the buzzer
       {
-        SENS_PORT->DOESET31_0 = SENS_BUZ_PIN;
+        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO13_MASK;
         is_buzzing = true;      
       }
       else 
       {
-        SENS_PORT->DOECLR31_0 = SENS_BUZ_PIN;
+        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO13_MASK;
         is_buzzing = false;
       }
       
@@ -190,7 +189,7 @@ void set_drive_straight(void)
 
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
-    switch (DL_Timer_getPendingInterrupt(ULT_SCHED_TIM_INST)) {
+    switch (getPendingInterrupt(ULT_SCHED_TIM_INST)) {
         case DL_TIMER_IIDX_ZERO: 
         {
             // Disable Echo Timer
@@ -283,10 +282,10 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
 
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
-    switch (DL_Timer_getPendingInterrupt(ULT_ECHO_TIM_INST)) {
+    switch (getPendingInterrupt(ULT_ECHO_TIM_INST)) {
         case DL_TIMER_IIDX_CC1_UP:
             // Store CC1 capture as pulse width for current sensor
-            g_ult_pw_us[g_ult_idx] = DL_Timer_getCaptureCompareValue(
+            g_ult_pw_us[g_ult_idx] = getCaptureCompareValue(
                 ULT_ECHO_TIM_INST,  DL_TIMER_CC_1_INDEX);
             // Disable Echo Timer
             ULT_ECHO_TIM_INST->COUNTERREGS.CTRCTL &= ~(GPTIMER_CTRCTL_EN_ENABLED);
@@ -302,16 +301,14 @@ void check_for_reverse(void)
   //Variables to hold the volatile RC data
   uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
   uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
-  //Use enums to determine movement state (forward, reverse, stationary)
-  //(Create helper function to determine state as an enum and return it)
+
   if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
   {
-    g_disable_buzzer = false;
+    g_ignore_systick = false;
   }
   else 
   {
-    //Force output low when not reversing
-    GPIOB->DOUT31_0 = GPIO_DOUT31_0_DIO13_MASK;
-    g_disable_buzzer = true;
+    g_ignore_systick = true;
   }
 }
+

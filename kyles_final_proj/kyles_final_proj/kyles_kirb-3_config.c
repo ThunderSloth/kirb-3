@@ -651,3 +651,27 @@ void ult_init(void) {
     // Start Ulrasonic Scheduler Timer
     ULT_SCHED_TIM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 }
+
+void setCaptureCompareValue(
+    GPTIMER_Regs *gptimer, uint32_t value, int ccIndex)
+{
+    volatile uint32_t *pReg;
+
+    pReg = &gptimer->COUNTERREGS.CC_01[0];
+    pReg += (uint32_t) ccIndex;
+
+    *pReg = (value);
+}
+
+uint32_t getCaptureCompareValue(
+    GPTIMER_Regs *gptimer, int ccIndex)
+{
+    volatile uint32_t *pReg;
+
+    pReg = &gptimer->COUNTERREGS.CC_01[0];
+    pReg += (uint32_t) ccIndex;
+
+    return (*pReg & GPTIMER_CC_01_CCVAL_MASK);
+}
+
+

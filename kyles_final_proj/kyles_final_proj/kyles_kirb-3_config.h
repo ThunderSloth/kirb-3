@@ -49,8 +49,6 @@
 #define SYS_TICK_PERIOD                                        (10.25E-3)
 #define SYS_TICK_PERIOD_COUNT  (SYST_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
 
-#define MAX_UINT32_STR_LEN (11)
-
 //-----------------------------------------------------------------------------
 // Type Definitions
 //-----------------------------------------------------------------------------
@@ -74,6 +72,8 @@ void rc_timer1_init(void);
 void ult_echo_tim_init(void);
 void ult_sched_tim_init(void);
 void ult_init(void);
+void setCaptureCompareValue(GPTIMER_Regs *gptimer, uint32_t value, int ccIndex);
+uint32_t getCaptureCompareValue(GPTIMER_Regs *gptimer, int ccIndex);
 
 
 //-----------------------------------------------------------------------------
@@ -107,6 +107,7 @@ static inline void update_reg(volatile uint32_t *reg,
     temp |= (value & mask);
     *reg = temp;
 }
+
 
 //-----------------------------------------------------------------------------
 // Global Variables (avoid if possible)
