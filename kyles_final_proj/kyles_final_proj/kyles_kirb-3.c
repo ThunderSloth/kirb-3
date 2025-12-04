@@ -49,15 +49,12 @@ int main(void)
     NVIC_EnableIRQ(ULT_SCHED_TIM_INST_INT_IRQN);
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
  
-    while (1) {
-        set_drive_straight();
-        scale_motor_speed();
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
-    msp_printf("%u. \n\r", 1);
+
 
     uint32_t count = 0;
     while (1) {
+        set_drive_straight();
+        scale_motor_speed();
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
