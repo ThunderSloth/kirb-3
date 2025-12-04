@@ -29,7 +29,8 @@ volatile uint16_t g_ult_pw_us[ULT_COUNT];
 // Sensor Index
 volatile uint8_t g_ult_idx = 0;
 
-bool g_ignore_systick = true;
+//Flag for enabling backup buzzer
+bool g_disable_buzzer = true;
 
 int main(void)
 {
@@ -111,18 +112,18 @@ void SysTick_Handler(void)
   
   static bool is_buzzing = false;
   
-  if (g_ignore_systick == false){
+  if (g_disable_buzzer == false){
     delay_time--;
     if (delay_time == 0)
     {
       if (is_buzzing == false)  //If statement for toggling the buzzer
       {
-        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO13_MASK;
+        SENS_PORT->DOESET31_0 = SENS_BUZ_PIN;
         is_buzzing = true;      
       }
       else 
       {
-        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO13_MASK;
+        SENS_PORT->DOECLR31_0 = SENS_BUZ_PIN;
         is_buzzing = false;
       }
       
@@ -228,14 +229,17 @@ void check_for_reverse(void)
   //Variables to hold the volatile RC data
   uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
   uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
-
+  //Use enums to determine movement state (forward, reverse, stationary)
+  //(Create helper function to determine state as an enum and return it)
   if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
   {
-    g_ignore_systick = false;
+    g_disable_buzzer = false;
   }
   else 
   {
-    g_ignore_systick = true;
+    //Force output low when not reversing
+    GPIOB->DOUT31_0 = GPIO_DOUT31_0_DIO13_MASK;
+    g_ignore_buzzer = true;
   }
 }
 

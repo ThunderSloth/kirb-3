@@ -32,6 +32,10 @@ void check_for_reverse(void);
 // -----------------------------------------------------------------------------
 // RC Channel Indices and Logical Aliases
 // -----------------------------------------------------------------------------
+typedef enum {
+      
+}
+
 
 typedef enum {
     RC_CH1_IDX,
@@ -136,6 +140,8 @@ static const RcChannelConfig g_rc_cfg[RC_CH_COUNT] = {
 // -----------------------------------------------------------------------------
 // Motor Configuration
 // -----------------------------------------------------------------------------
+
+typedef enum
 
 typedef enum {
     MOTOR1_IDX,
