@@ -74,6 +74,7 @@ void ult_sched_tim_init(void);
 void ult_init(void);
 void setCaptureCompareValue(GPTIMER_Regs *gptimer, uint32_t value, int ccIndex);
 uint32_t getCaptureCompareValue(GPTIMER_Regs *gptimer, int ccIndex);
+uint32_t getTimerCount(const GPTIMER_Regs *gptimer);
 
 //-----------------------------------------------------------------------------
 // Inline Utility Helpers

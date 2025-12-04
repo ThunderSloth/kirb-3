@@ -112,11 +112,11 @@ void GROUP1_IRQHandler(void)
         RC_IN_PORT->(CPU_INT.MIS & (g_rc_cfg[RC_CH_VR_A].gpio_pin | g_rc_cfg[RC_CH_VR_B].gpio_pin));
 
     if (rc_in_status & g_rc_cfg[RC_CH_VR_A].gpio_pin) {
-        g_rc_pw_us[RC_CH_VR_A] = DL_Timer_getTimerCount(g_rc_cfg[RC_CH_VR_A].timer_inst);
+        g_rc_pw_us[RC_CH_VR_A] = getTimerCount(g_rc_cfg[RC_CH_VR_A].timer_inst);
         RC_IN_PORT-> (CPU_INT.ICLR |=(g_rc_cfg[RC_CH_VR_A].gpio_pin));
     } 
     if (rc_in_status & g_rc_cfg[RC_CH_VR_B].gpio_pin) {
-        g_rc_pw_us[RC_CH_VR_B] = DL_Timer_getTimerCount(g_rc_cfg[RC_CH_VR_B].timer_inst);
+        g_rc_pw_us[RC_CH_VR_B] = getTimerCount(g_rc_cfg[RC_CH_VR_B].timer_inst);
         RC_IN_PORT-> (CPU_INT.ICLR |=(g_rc_cfg[RC_CH_VR_B].gpio_pin));
     }
 }

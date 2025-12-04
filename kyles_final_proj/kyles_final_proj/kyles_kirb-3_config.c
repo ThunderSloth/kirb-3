@@ -674,4 +674,7 @@ uint32_t getCaptureCompareValue(
     return (*pReg & GPTIMER_CC_01_CCVAL_MASK);
 }
 
-
+uint32_t getTimerCount(const GPTIMER_Regs *gptimer)
+{
+    return (gptimer->COUNTERREGS.CTR & GPTIMER_CTR_CCTR_MASK);
+}
