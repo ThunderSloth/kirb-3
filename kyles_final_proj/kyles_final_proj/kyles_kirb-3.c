@@ -133,7 +133,7 @@ void SysTick_Handler(void)
 }
 
 
-void SCALE_MOTOR_SPEED(void)
+void scale_motor_speed(void)
 {
     uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
     uint16_t mtr_val;
