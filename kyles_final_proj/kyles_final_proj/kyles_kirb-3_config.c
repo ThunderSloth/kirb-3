@@ -36,6 +36,7 @@
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
 #include "clock.h"
+#include "uart.h"
 #include "LaunchPad.h"
 #include "ti_msp_dl_config.h"
 #include "kyles_kirb-3_config.h"
@@ -264,6 +265,7 @@ void config_init(void)
     rc_timer1_init();
     ult_init();
     sys_tick_init(SYS_TICK_PERIOD_COUNT);
+    UART_init(PC_BAUD_RATE);
 }
 
 
