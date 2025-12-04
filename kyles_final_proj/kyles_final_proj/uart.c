@@ -262,3 +262,46 @@ void msp_printf(char* buffer, unsigned int value)
     } /* for */
 
 } /* msp_printf */
+
+void uint_to_string(uint32_t number, char *buffer)
+{
+  #define MAX_UINT32_STR_LEN (11)
+  // Create a temporary buffer to build string
+  char temp_buf[MAX_UINT32_STR_LEN];
+  // Handle the special case of 0
+  if (number == 0)
+  {
+    buffer[0] = '0';
+    buffer[1] = '\0';
+  } /* if */
+  else
+  {
+    uint8_t num_ascii_digits = 0;
+    // Convert the number to string in reverse order
+    while ((number > 0) && (num_ascii_digits < MAX_UINT32_STR_LEN - 1))
+    {
+      // Convert last digit to ASCII and stuff into temp buffer
+      temp_buf[num_ascii_digits++] = (number % 10) + '0';
+      // Remove the last digit and update number
+      number /= 10;
+    } /* while */
+    // Copy and reverse ASCII digits from temp buffer to buffer
+    for (uint8_t i = 0; i < num_ascii_digits; i++)
+    {
+      buffer[i] = temp_buf[num_ascii_digits - i - 1];
+    } /* for */
+    // Null terminate the buffer
+    buffer[num_ascii_digits] = '\0';
+  } /* else */
+} /* uint_to_string */
+
+void uart_write_string(const char *string)
+{
+  //Writes each character to the console sequentially untill the null char 
+  //is reached
+  while(*string != '\0')
+  {
+    UART_out_char(*string++);
+  }
+
+}

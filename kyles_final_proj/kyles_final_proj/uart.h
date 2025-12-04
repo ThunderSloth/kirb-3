@@ -68,6 +68,8 @@ void UART_out_char(char data);
 void UART_print(const char *string);
 void UART_println(const char *string);
 void msp_printf(char* buffer, unsigned int value);
+void uint_to_string(uint32_t number, char *buffer)
+void uart_write_string(const char *string);
 
 #define NEWLINE ("\n\r")
 #define NULL_TERMINATOR ('\0')
