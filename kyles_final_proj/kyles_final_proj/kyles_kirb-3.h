@@ -16,6 +16,8 @@ void check_for_reverse(void);
 
 // =============================================================================
 
+#define PC_BAUD_RATE (115200)
+
 // GPIO functionality is always a pin function of 0x00000001
 #define IOMUX_PINCM_FUNCSEL_GPIO (1u)
 
@@ -196,7 +198,59 @@ static const MtrConfig g_mtr_cfg[MOTOR_COUNT] = {
 #define PING_ECHO_FUNC (GPIO_ULT_ECHO_TIM_C0_IOMUX_FUNC)
 
 #define ULT_COUNT      (10)
+#define ULTS_PER_MUX   (5)
 #define TRIG_PW_US     (5)
+
+typedef enum {
+    MUX1_IDX,
+    MUX2_IDX,
+    MUX_COUNT,
+} MuxIndex;
+
+typedef struct {
+    GPIO_Regs *gpio_port;
+    uint32_t   gpio_pin;
+    uint32_t   iomux_pincm;
+} MuxEnConfig;
+
+static const MuxEnConfig g_mux_en_cfg[MUX_COUNT] = {
+    [MUX1_IDX] = {
+        .gpio_port = MUX_EN0_PORT,
+        .gpio_pin = MUX_EN0_PIN,
+        .iomux_pincm = MUX_EN0_IOMUX,
+    },
+    [MUX2_IDX] = {
+        .gpio_port = MUX_EN1_PORT,
+        .gpio_pin = MUX_EN1_PIN,
+        .iomux_pincm = MUX_EN1_IOMUX,
+    },
+};
+
+#define MUX_SEL_COUNT (3)
+
+typedef struct {
+    GPIO_Regs *gpio_port;
+    uint32_t  gpio_pin;
+    uint32_t  iomux_pincm;
+} MuxSelConfig;
+
+static const MuxSelConfig g_mux_sel_cfg[MUX_SEL_COUNT] = {
+    {
+        .gpio_port = MUX_SEL0_PORT,
+        .gpio_pin = MUX_SEL0_PIN ,
+        .iomux_pincm = MUX_SEL0_IOMUX,
+    },
+    {
+        .gpio_port = MUX_SEL1_PORT,
+        .gpio_pin = MUX_SEL1_PIN,
+        .iomux_pincm = MUX_SEL1_IOMUX,
+    },
+    {
+        .gpio_port = MUX_SEL2_PORT,
+        .gpio_pin = MUX_SEL2_PIN,
+        .iomux_pincm = MUX_SEL2_IOMUX,
+    },
+};
 
 #endif // KIRB_H_
 
