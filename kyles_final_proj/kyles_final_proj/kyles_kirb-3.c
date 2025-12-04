@@ -72,7 +72,7 @@ int main(void)
 void RC_TIM0_INST_IRQHandler (void)
 {
     RcIndex chan;
-    switch (DL_Timer_getPendingInterrupt(RC_TIM0_INST)) {
+    switch (uint32_t RC_TIM0_INST->CPU_INT.IIDX) {
         case g_rc_cfg[RC_CH_LS_X].irq_event:
             chan = RC_CH_LS_X;
             break;
@@ -95,7 +95,7 @@ void RC_TIM0_INST_IRQHandler (void)
 
 void RC_TIM1_INST_IRQHandler (void)
 {
-    switch (DL_Timer_getPendingInterrupt(RC_TIM1_INST)) {
+    switch (uint32_t RC_TIM1_INST->CPU_INT.IIDX) {
         case g_rc_cfg[RC_CH_RS_X].irq_event:
             g_rc_pw_us[RC_CH_RS_X] = DL_Timer_getCaptureCompareValue(
                 (GPTIMER_Regs *)g_rc_cfg[RC_CH_RS_X].timer_inst,
@@ -190,7 +190,7 @@ void set_drive_straight(void)
 
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
-    switch (DL_Timer_getPendingInterrupt(ULT_SCHED_TIM_INST)) {
+    switch (uint32_t ULT_SCHED_TIM_INST->CPU_INT.IIDX) {
         case DL_TIMER_IIDX_ZERO: 
         {
             // Disable Echo Timer
@@ -280,10 +280,10 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
             return;
     }
 }
-
+ULT_ECHO_TIM_INST
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
-    switch (DL_Timer_getPendingInterrupt(ULT_ECHO_TIM_INST)) {
+    switch (uint32_t ULT_ECHO_TIM_INST->CPU_INT.IIDX) {
         case DL_TIMER_IIDX_CC1_UP:
             // Store CC1 capture as pulse width for current sensor
             g_ult_pw_us[g_ult_idx] = DL_Timer_getCaptureCompareValue(
@@ -311,7 +311,7 @@ void check_for_reverse(void)
   else 
   {
     //Force output low when not reversing
-    GPIOB->DOUT31_0 = GPIO_DOUT31_0_DIO13_MASK;
+    SENS_PORT->DOECLR31_0 = SENS_BUZ_PIN;
     g_disable_buzzer = true;
   }
 }
