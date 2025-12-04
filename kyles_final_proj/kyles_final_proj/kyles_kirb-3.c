@@ -1,9 +1,11 @@
+#include "clock.h"
 #include "ti/devices/msp/peripherals/hw_gpio.h"
 #include "ti/devices/msp/peripherals/hw_gptimer.h"
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
 #include "ti_msp_dl_config.h"
 #include "kyles_kirb-3_config.h"
+#include "uart.h"
 #include "kyles_kirb-3.h"
 
 //-----------------------------------------------------------------------------
@@ -46,11 +48,21 @@ int main(void)
     NVIC_EnableIRQ(ULT_SCHED_TIM_INST_INT_IRQN);
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
  
-    while (1) {
+    msp_printf("%u. \n\r", 1);
 
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
-        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
+    uint32_t count = 0;
+    while (1) {
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
+        DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
+        msec_delay(10);
+        if (count++ <= 10000){
+            count = 0;
+            for (uint32_t i = 0; i < ULT_COUNT; i++) {
+                msp_printf("%u. ", i);
+                msp_printf("%u\n\r", g_ult_pw_us[i]);
+            }
+        }
     }
 }
 

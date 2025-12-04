@@ -16,6 +16,8 @@ void check_for_reverse(void);
 
 // =============================================================================
 
+#define PC_BAUD_RATE (115200)
+
 // GPIO functionality is always a pin function of 0x00000001
 #define IOMUX_PINCM_FUNCSEL_GPIO (1u)
 
