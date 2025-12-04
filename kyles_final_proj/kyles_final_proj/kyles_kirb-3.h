@@ -12,6 +12,9 @@
 void check_for_reverse(void);
 #define NON_APPLICABLE ((uint32_t)0xFFFFFFFFu)
 
+void scale_motor_speed(void);
+void set_drive_straight(void);
+
 
 
 // =============================================================================
@@ -25,6 +28,7 @@ void check_for_reverse(void);
 #define SERVO_MIN_PULSE_WIDTH_US          (1000u)
 #define SERVO_NEUTRAL_PULSE_WIDTH_US      (1500u)
 #define SERVO_MAX_PULSE_WIDTH_US          (2000u)
+#define SERVO_MIN_PULSE_WIDTH_DIFF_US     (50u) // May need to be adjusted
 
 //SysTick initialization constants
 #define MSPM0_CLOCK_FREQUENCY                                       (40E6)
