@@ -46,7 +46,8 @@ int main(void)
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
  
     while (1) {
-
+        set_drive_straight();
+        scale_motor_speed();
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST , g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
@@ -164,7 +165,8 @@ void scale_motor_speed(void)
 // This will make it easier to drive in a straight line
 void set_drive_straight(void)
 {
-    if (g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] > -50u & g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] < 50u)
+    if (g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] > (-1 * SERVO_MIN_PULSE_WIDTH_DIFF_US) & 
+        g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] < SERVO_MIN_PULSE_WIDTH_DIFF_US)
     {
         g_rc_pw_us[L_MTR_RC_IN_CH] = g_rc_pw_us[R_MTR_RC_IN_CH];
     }
