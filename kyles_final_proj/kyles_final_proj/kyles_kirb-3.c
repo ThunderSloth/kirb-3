@@ -104,19 +104,20 @@ void RC_TIM1_INST_IRQHandler (void)
             return;
     }
 }
-
+(gpio->CPU_INT.MIS & pins
+gpio->CPU_INT.ICLR |= pins;
 void GROUP1_IRQHandler(void)
 {
-    const uint32_t rc_in_status = DL_GPIO_getEnabledInterruptStatus(
-        RC_IN_PORT, (g_rc_cfg[RC_CH_VR_A].gpio_pin | g_rc_cfg[RC_CH_VR_B].gpio_pin));
+    const uint32_t rc_in_status = 
+        RC_IN_PORT->(CPU_INT.MIS & (g_rc_cfg[RC_CH_VR_A].gpio_pin | g_rc_cfg[RC_CH_VR_B].gpio_pin));
 
     if (rc_in_status & g_rc_cfg[RC_CH_VR_A].gpio_pin) {
         g_rc_pw_us[RC_CH_VR_A] = DL_Timer_getTimerCount(g_rc_cfg[RC_CH_VR_A].timer_inst);
-        DL_GPIO_clearInterruptStatus(RC_IN_PORT, (g_rc_cfg[RC_CH_VR_A].gpio_pin));
+        RC_IN_PORT-> (CPU_INT.ICLR |=(g_rc_cfg[RC_CH_VR_A].gpio_pin));
     } 
     if (rc_in_status & g_rc_cfg[RC_CH_VR_B].gpio_pin) {
         g_rc_pw_us[RC_CH_VR_B] = DL_Timer_getTimerCount(g_rc_cfg[RC_CH_VR_B].timer_inst);
-        DL_GPIO_clearInterruptStatus(RC_IN_PORT, (g_rc_cfg[RC_CH_VR_B].gpio_pin));
+        RC_IN_PORT-> (CPU_INT.ICLR |=(g_rc_cfg[RC_CH_VR_B].gpio_pin));
     }
 }
 

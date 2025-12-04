@@ -75,7 +75,6 @@ void ult_init(void);
 void setCaptureCompareValue(GPTIMER_Regs *gptimer, uint32_t value, int ccIndex);
 uint32_t getCaptureCompareValue(GPTIMER_Regs *gptimer, int ccIndex);
 
-
 //-----------------------------------------------------------------------------
 // Inline Utility Helpers
 //-----------------------------------------------------------------------------
