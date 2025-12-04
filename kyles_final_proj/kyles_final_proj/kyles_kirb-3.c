@@ -303,4 +303,3 @@ void check_for_reverse(void)
     g_ignore_buzzer = true;
   }
 }
-
