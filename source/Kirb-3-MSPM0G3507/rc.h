@@ -6,12 +6,6 @@
 #include "ti_msp_dl_config.h"
 #include <stdint.h>
 
-// Standard hobby servo pulse widths (microseconds)
-#define SERVO_MIN_PULSE_WIDTH_US (1000u)
-#define SERVO_NEUTRAL_PULSE_WIDTH_US (1500u)
-#define SERVO_MAX_PULSE_WIDTH_US (2000u)
-#define SERVO_MIN_PULSE_WIDTH_DIFF_US (50u) // May need to be adjusted
-
 void rc_ch1_3_irq(void);
 void rc_ch4_irq(void);
 void rc_ch5_6_irq(void);
