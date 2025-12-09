@@ -32,8 +32,15 @@ volatile uint16_t g_ult_pw_us[ULT_COUNT];
 // Sensor Index
 volatile uint8_t g_ult_idx = 0;
 
-bool g_ignore_systick = true;
+//Flag used to control SysTick ISR
+bool g_disable_buzzer = true;
 
+//-----------------------------------------------------------------------------
+// main
+//-----------------------------------------------------------------------------
+// Main function that configures the peripherals, schedules the sensors, and
+// runs the main driving loop
+//-----------------------------------------------------------------------------
 int main(void)
 {
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++) {
@@ -68,10 +75,17 @@ int main(void)
     }
 }
 
+//-----------------------------------------------------------------------------
+// RC_TIM0_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Interrupt handler for the TIM0 timer that will read input data from each 
+//  joystick on the RC controller.
+//  (Note - the x-axis of the right stick is read by TIM1)
+//-----------------------------------------------------------------------------
 void RC_TIM0_INST_IRQHandler (void)
 {
     RcIndex chan;
-    switch (uint32_t RC_TIM0_INST->CPU_INT.IIDX) {
+    switch ((uint32_t) RC_TIM0_INST->CPU_INT.IIDX) {
         case g_rc_cfg[RC_CH_LS_X].irq_event:
             chan = RC_CH_LS_X;
             break;
@@ -92,9 +106,15 @@ void RC_TIM0_INST_IRQHandler (void)
     );
 }
 
+//-----------------------------------------------------------------------------
+// RC_TIM1_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Interrupt handler for the TIM1 timer that reads the input data from the 
+//  x-axis of the right joystick on the RC controller.
+//-----------------------------------------------------------------------------
 void RC_TIM1_INST_IRQHandler (void)
 {
-    switch (uint32_t RC_TIM1_INST->CPU_INT.IIDX) {
+    switch ((uint32_t) RC_TIM1_INST->CPU_INT.IIDX) {
         case g_rc_cfg[RC_CH_RS_X].irq_event:
             g_rc_pw_us[RC_CH_RS_X] = getCaptureCompareValue(
                 (GPTIMER_Regs *)g_rc_cfg[RC_CH_RS_X].timer_inst,
@@ -104,8 +124,13 @@ void RC_TIM1_INST_IRQHandler (void)
             return;
     }
 }
-(gpio->CPU_INT.MIS & pins
-gpio->CPU_INT.ICLR |= pins;
+
+//-----------------------------------------------------------------------------
+// GROUP1_IRQHandler
+//-----------------------------------------------------------------------------
+// GPIO interrupt handler for reading input data from the knobs (potentiometers)
+// on the RC controller
+//-----------------------------------------------------------------------------
 void GROUP1_IRQHandler(void)
 {
     const uint32_t rc_in_status = 
@@ -117,17 +142,23 @@ void GROUP1_IRQHandler(void)
     } 
     if (rc_in_status & g_rc_cfg[RC_CH_VR_B].gpio_pin) {
         g_rc_pw_us[RC_CH_VR_B] = getTimerCount(g_rc_cfg[RC_CH_VR_B].timer_inst);
-        RC_IN_PORT-> (CPU_INT.ICLR |=(g_rc_cfg[RC_CH_VR_B].gpio_pin));
+        RC_IN_PORT-> (CPU_INT.CLR |=(g_rc_cfg[RC_CH_VR_B].gpio_pin));
     }
 }
 
+//-----------------------------------------------------------------------------
+// SysTick_Handler
+//-----------------------------------------------------------------------------
+// SysTick Handler for toggling the backup buzzer(andlighting the LED). 
+// The buzzer toggling will only occur when the g_disable_buzzer flag is false 
+//-----------------------------------------------------------------------------
 void SysTick_Handler(void)
 {
   static uint16_t delay_time = 1;
   
   static bool is_buzzing = false;
   
-  if (g_ignore_systick == false){
+  if (g_disable_buzzer == false){
     delay_time--;
     if (delay_time == 0)
     {
@@ -148,7 +179,13 @@ void SysTick_Handler(void)
   }
 }
 
-//Scales the motor speed based on variable resistor input from remote controll
+
+//-----------------------------------------------------------------------------
+// scale_motor_speed
+//-----------------------------------------------------------------------------
+// Scales the motor speed based on variable resistor input and pulse width
+// data from remote control
+//-----------------------------------------------------------------------------
 void scale_motor_speed(void)
 {
     uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
@@ -176,8 +213,13 @@ void scale_motor_speed(void)
 }
 
 
-// Checks if motor values are within a sertain range of each other and sets the Left value to the Right if they are
-// This will make it easier to drive in a straight line
+//-----------------------------------------------------------------------------
+// set_drive_straight
+//-----------------------------------------------------------------------------
+// Checks if motor values are within a sertain range of each other and sets 
+// the Left value to the Right if they are This will make it easier to drive 
+// in a straight line
+//-----------------------------------------------------------------------------
 void set_drive_straight(void)
 {
     if (g_rc_pw_us[L_MTR_RC_IN_CH] - g_rc_pw_us[R_MTR_RC_IN_CH] > (-1 * SERVO_MIN_PULSE_WIDTH_DIFF_US) & 
@@ -187,10 +229,15 @@ void set_drive_straight(void)
     }
 }
 
-
+//-----------------------------------------------------------------------------
+// ULT_SCHED_TIM_INST_IRQHandler
+//-----------------------------------------------------------------------------
+// 
+// 
+//-----------------------------------------------------------------------------
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
-    switch (uint32_t ULT_SCHED_TIM_INST->CPU_INT.IIDX) {
+    switch ((uint32_t) ULT_SCHED_TIM_INST->CPU_INT.IIDX) {
         case DL_TIMER_IIDX_ZERO: 
         {
             // Disable Echo Timer
@@ -280,10 +327,16 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
             return;
     }
 }
-ULT_ECHO_TIM_INST
+
+//-----------------------------------------------------------------------------
+// ULT_SCHED_TIM_INST_IRQHandler
+//-----------------------------------------------------------------------------
+// 
+// 
+//-----------------------------------------------------------------------------
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
-    switch (uint32_t ULT_ECHO_TIM_INST->CPU_INT.IIDX) {
+    switch ((uint32_t) ULT_ECHO_TIM_INST->CPU_INT.IIDX) {
         case DL_TIMER_IIDX_CC1_UP:
             // Store CC1 capture as pulse width for current sensor
             g_ult_pw_us[g_ult_idx] = getCaptureCompareValue(
@@ -296,8 +349,14 @@ void ULT_ECHO_TIM_INST_IRQHandler(void)
     }
 }
 
-//Need to add to main loop
-void check_for_reverse(void)
+//-----------------------------------------------------------------------------
+// check_for_reverse
+//-----------------------------------------------------------------------------
+// Function that will use the Y-axis data from the RC controller to determine 
+// if the robot is currently reversing. If it detects reverse motion it will
+// enable the toggling in the SysTick ISR
+//-----------------------------------------------------------------------------
+void check_for_reverse(void) //Need to add to main loop
 {
   //Variables to hold the volatile RC data
   uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
@@ -305,7 +364,7 @@ void check_for_reverse(void)
 
   if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
   {
-    g_ignore_systick = false;
+    g_disable_buzzer = false;
   }
   else 
   {
