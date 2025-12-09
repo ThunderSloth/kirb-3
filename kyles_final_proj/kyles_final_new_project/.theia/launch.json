@@ -54,6 +54,15 @@
                 "name": "Kirb-3-MSPM0G3507",
                 "resourceId": "/Kirb-3-MSPM0G3507/rc.h"
             }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (6)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/rc.c"
+            }
         }
     ]
 }
