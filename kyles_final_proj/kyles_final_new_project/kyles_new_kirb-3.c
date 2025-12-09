@@ -38,14 +38,14 @@ int main(void)
         uint16_t rmtr_val= g_rc_pw_us[R_MTR_RC_IN_CH];
         uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
         uint8_t scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
-        //------------------------------------------------------------------
+        //========================================================
         if (lmtr_val - rmtr_val > (-1 * SERVO_MIN_PULSE_WIDTH_DIFF_US) & 
             lmtr_val - rmtr_val < SERVO_MIN_PULSE_WIDTH_DIFF_US)
         {
             lmtr_val = rmtr_val;
         }
 
-        //--------------------------------------------------------------
+        //==============================================================
         int16_t mtr_diff = lmtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
         mtr_diff = mtr_diff * scale_percent;
 
