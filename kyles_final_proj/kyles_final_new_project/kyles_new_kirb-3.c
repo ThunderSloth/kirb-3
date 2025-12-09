@@ -1,5 +1,6 @@
 #include "kyles_new_kirb-3.h"
 
+#include <stdlib.h>
 #include "cmd_shell.h"
 #include "motor.h"
 #include "ping.h"
@@ -37,14 +38,14 @@ int main(void)
         uint16_t lmtr_val= g_rc_pw_us[L_MTR_RC_IN_CH];
         uint16_t rmtr_val= g_rc_pw_us[R_MTR_RC_IN_CH];
         uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
-        uint8_t scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
+        uint16_t scale_percent;
+        scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
         //========================================================
-        if (lmtr_val - rmtr_val > (-1 * SERVO_MIN_PULSE_WIDTH_DIFF_US) & 
-            lmtr_val - rmtr_val < SERVO_MIN_PULSE_WIDTH_DIFF_US)
+        if (abs(lmtr_val - rmtr_val) <  SERVO_MIN_PULSE_WIDTH_DIFF_US)
         {
             lmtr_val = rmtr_val;
         }
-
+        /*
         //==============================================================
         int16_t mtr_diff = lmtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
         mtr_diff = mtr_diff * scale_percent;
@@ -58,8 +59,7 @@ int main(void)
         rmtr_val = SERVO_NEUTRAL_PULSE_WIDTH_US + mtr_diff;
 
         //-------------------------------------------------------------
-        void scale_motor_speed(void);
-        void set_drive_straight(void);
+        */
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST,
                                         lmtr_val,
                                         g_mtr_cfg[L_MTR_IDX].timer_cc);
