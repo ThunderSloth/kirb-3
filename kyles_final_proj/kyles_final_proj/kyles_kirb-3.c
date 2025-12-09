@@ -61,6 +61,7 @@ int main(void)
     while (1) {
         set_drive_straight();
         scale_motor_speed();
+        check_for_reverse();
         setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[L_MTR_RC_IN_CH], g_mtr_cfg[L_MTR_IDX].timer_cc);
         setCaptureCompareValue(MOTOR_PWM_INST, g_rc_pw_us[R_MTR_RC_IN_CH], g_mtr_cfg[R_MTR_IDX].timer_cc);
         __NOP();
