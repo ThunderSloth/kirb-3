@@ -12,6 +12,8 @@
 // -----------------------------------------------------------------------------
 void scale_motor_speed(void);
 void set_drive_straight(void);
+void buzz_init(void);
+void check_for_reverse(void);
 // =============================================================================
 
 // GPIO functionality is always a pin function of 0x00000001
@@ -22,4 +24,7 @@ void set_drive_straight(void);
 #define SYS_TICK_PERIOD (10.25E-3)
 #define SYS_TICK_PERIOD_COUNT (SYS_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
 
+
+#define SENS_BUZ_PIN                                                (0x00000200)
+#define SENS_BUZ_IOMUX                                           (IOMUX_PINCM26)
 #endif // KIRB_H_

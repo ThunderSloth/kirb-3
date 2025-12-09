@@ -14,6 +14,8 @@
 #include "uart_debug.h"
 #include "LaunchPad.h"
 
+bool g_disable_buzzer = true;
+
 int main(void)
 {
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++)
@@ -27,6 +29,7 @@ int main(void)
     }
 
     SYSCFG_DL_init();
+    buzz_init();
     ping_init();
     sys_tick_init(SYS_TICK_PERIOD_COUNT);
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
@@ -102,4 +105,64 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
     ult_echo_irq();
+}
+
+//-----------------------------------------------------------------------------
+// SysTick_Handler
+//-----------------------------------------------------------------------------
+// SysTick Handler for toggling the backup buzzer(andlighting the LED). 
+// The buzzer toggling will only occur when the g_disable_buzzer flag is false 
+//-----------------------------------------------------------------------------
+void SysTick_Handler(void)
+{
+  static uint16_t delay_time = 1;
+  
+  static bool is_buzzing = false;
+  
+  if (g_disable_buzzer == false){
+    delay_time--;
+    if (delay_time == 0)
+    {
+      if (is_buzzing == false)  //If statement for toggling the buzzer
+      {
+        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO09_MASK;
+        is_buzzing = true;      
+      }
+      else 
+      {
+        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO09_MASK;
+        is_buzzing = false;
+      }
+      
+      delay_time = 100;        //May need to adjust delay time when testing
+      
+    } 
+  }
+}
+
+void check_for_reverse(void) 
+{
+  //Variables to hold the volatile RC data
+  uint16_t rs_y_value = g_rc_pw_us[RC_CH_RS_Y];
+  uint16_t ls_y_value = g_rc_pw_us[RC_CH_LS_Y];
+
+  if (rs_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US && ls_y_value < SERVO_NEUTRAL_PULSE_WIDTH_US)
+  {
+    g_disable_buzzer = false;
+  }
+  else 
+  {
+    //Force output low when not reversing
+    GPIOB->DOECLR31_0 = SENS_BUZ_PIN;
+    g_disable_buzzer = true;
+  }
+}
+
+void buzz_init(void)
+{
+  //Configure IOMUX function and enable output for PB13 (Buzzer) 
+  IOMUX->SECCFG.PINCM[SENS_BUZ_IOMUX] = IOMUX_PINCM_PC_CONNECTED |
+                                        IOMUX_PINCM26_PF_GPIOB_DIO09;
+
+  GPIOB->DOE31_0 |= GPIO_DOE31_0_DIO09_ENABLE;
 }
