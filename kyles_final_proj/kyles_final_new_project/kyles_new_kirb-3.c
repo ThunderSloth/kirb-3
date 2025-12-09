@@ -9,6 +9,7 @@
 #include "ti/driverlib/dl_timerg.h"
 #include "ti_msp_dl_config.h"
 #include "uart_debug.h"
+#include "LaunchPad.h"
 
 int main(void)
 {
@@ -24,13 +25,13 @@ int main(void)
 
     SYSCFG_DL_init();
     ping_init();
-
+    sys_tick_init(SYS_TICK_PERIOD_COUNT);
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_TIM1_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
     NVIC_EnableIRQ(ULT_SCHED_TIM_INST_INT_IRQN);
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
-
+  
     cmd_shell_print_boot_msg();
 
     while (1)

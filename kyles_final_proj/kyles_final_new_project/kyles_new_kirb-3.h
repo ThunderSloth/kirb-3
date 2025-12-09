@@ -19,7 +19,7 @@ void set_drive_straight(void);
 
 // SysTick initialization constants
 #define MSPM0_CLOCK_FREQUENCY (CPUCLK_FREQ)
-#define SYST_TICK_PERIOD (10.25E-3)
-#define SYST_TICK_PERIOD_COUNT (SYST_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
+#define SYS_TICK_PERIOD (10.25E-3)
+#define SYS_TICK_PERIOD_COUNT (SYS_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
 
 #endif // KIRB_H_
