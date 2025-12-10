@@ -13,6 +13,7 @@
 #include "ti_msp_dl_config.h"
 #include "uart_debug.h"
 #include "LaunchPad.h"
+#include "clock.h"
 
 bool g_disable_buzzer = true;
 
@@ -125,12 +126,12 @@ void SysTick_Handler(void)
     {
       if (is_buzzing == false)  //If statement for toggling the buzzer
       {
-        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO09_MASK;
+        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO9_MASK;
         is_buzzing = true;      
       }
       else 
       {
-        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO09_MASK;
+        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO9_MASK;
         is_buzzing = false;
       }
       
@@ -164,5 +165,5 @@ void buzz_init(void)
   IOMUX->SECCFG.PINCM[SENS_BUZ_IOMUX] = IOMUX_PINCM_PC_CONNECTED |
                                         IOMUX_PINCM26_PF_GPIOB_DIO09;
 
-  GPIOB->DOE31_0 |= GPIO_DOE31_0_DIO09_ENABLE;
+  GPIOB->DOE31_0 |= GPIO_DOE31_0_DIO9_ENABLE;
 }
