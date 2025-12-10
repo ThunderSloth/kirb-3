@@ -48,16 +48,16 @@ int main(void)
 
         lmtr_val = set_drive_straight();  
         check_for_reverse();    
-
+        /*
         float fult_cm = ping_us_to_cm_float(g_ult_pw_us[ANT_CTR_ULT_IDX]);
         float rult_cm = ping_us_to_cm_float(g_ult_pw_us[POST_CTR_ULT_IDX]);
 
-        if (fult_cm < 15 || rult_cm < 15)
+        if (fult_cm < 5 || rult_cm < 5)
         {
             lmtr_val = 1500;
             rmtr_val = 1500;
         }
-
+        */
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST,
                                         lmtr_val,
                                         g_mtr_cfg[L_MTR_IDX].timer_cc);
@@ -123,7 +123,7 @@ void SysTick_Handler(void)
         is_buzzing = false;
       }
       
-      delay_time = 100;        //May need to adjust delay time when testing
+      delay_time = 1000;        //May need to adjust delay time when testing
       
     } 
   }
