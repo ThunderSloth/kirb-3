@@ -43,71 +43,75 @@ int main(void)
 
     while (1)
     {   
-      
-        set_drive_straight();  
-        check_for_reverse();    
+        uint16_t lmtr_val= g_rc_pw_us[L_MTR_RC_IN_CH];
+        uint16_t rmtr_val= g_rc_pw_us[R_MTR_RC_IN_CH];
+        uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
+        uint16_t scale_percent;
+        scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
+        //==============================================================
+        if (abs(lmtr_val - rmtr_val) <  SERVO_MIN_PULSE_WIDTH_DIFF_US)
+        {
+            lmtr_val = rmtr_val;
+        }
+
+        float fult_cm = ping_us_to_cm_float(g_ult_pw_us[ANT_CTR_ULT_IDX]);
+        float rult_cm = ping_us_to_cm_float(g_ult_pw_us[POST_CTR_ULT_IDX]);
+
+        if (fult_cm < 15 | rult_cm < 15)
+        {
+            lmtr_val = 1500;
+            rmtr_val = 1500;
+        }
+        /*
+        //==============================================================
+        int16_t mtr_diff = lmtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
+        mtr_diff = mtr_diff * scale_percent;
+
+        lmtr_val = SERVO_NEUTRAL_PULSE_WIDTH_US + mtr_diff;
+
+        //---------------------------------------------------------------
+        mtr_diff = rmtr_val - SERVO_NEUTRAL_PULSE_WIDTH_US;
+        mtr_diff = mtr_diff * scale_percent;
+
+        rmtr_val = SERVO_NEUTRAL_PULSE_WIDTH_US + mtr_diff;
+
+        //-------------------------------------------------------------
+        */
+
+        //printf("%" PRIu16 " us\n", var_res);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST,
                                         lmtr_val,
                                         g_mtr_cfg[L_MTR_IDX].timer_cc);
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST,
                                         rmtr_val,
                                         g_mtr_cfg[R_MTR_IDX].timer_cc);
+
         cmd_shell_poll();
 
         __NOP();
     }
 }
 
-//-----------------------------------------------------------------------------
-// RC_TIM0_INST_IRQHandler
-//-----------------------------------------------------------------------------
-//  Interrupt handler for the TIM0 timer that will read input data from each 
-//  joystick on the RC controller.
-//  (Note - the x-axis of the right stick is read by TIM1)
-//-----------------------------------------------------------------------------
 void RC_TIM0_INST_IRQHandler(void)
 {
     rc_ch1_3_irq();
 }
 
-//-----------------------------------------------------------------------------
-// RC_TIM1_INST_IRQHandler
-//-----------------------------------------------------------------------------
-//  Interrupt handler for the TIM1 timer that reads the input data from the 
-//  x-axis of the right joystick on the RC controller.
-//-----------------------------------------------------------------------------
 void RC_TIM1_INST_IRQHandler(void)
 {
     rc_ch4_irq();
 }
 
-//-----------------------------------------------------------------------------
-// GROUP1_IRQHandler
-//-----------------------------------------------------------------------------
-// GPIO interrupt handler for reading input data from the knobs (potentiometers)
-// on the RC controller
-//-----------------------------------------------------------------------------
 void GROUP1_IRQHandler(void)
 {
     rc_ch5_6_irq();
 }
-//-----------------------------------------------------------------------------
-// ULT_SCHED_TIM_INST_IRQHandler
-//-----------------------------------------------------------------------------
-//  Interrupt handler used to schedule the activation of each ultrasonic sensor
-//  (one at a time).
-//-----------------------------------------------------------------------------
+
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
     ult_sched_irq();
 }
 
-//-----------------------------------------------------------------------------
-// ULT_SCHED_TIM_INST_IRQHandler
-//-----------------------------------------------------------------------------
-//  Timer interrupt handler used to send the trigger signal to the current 
-//  ultrasonic sensor and read the resulting echo signal sent back.
-//-----------------------------------------------------------------------------
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
     ult_echo_irq();
@@ -146,13 +150,6 @@ void SysTick_Handler(void)
   }
 }
 
-//-----------------------------------------------------------------------------
-// check_for_reverse
-//-----------------------------------------------------------------------------
-// Function that will use the Y-axis data from the RC controller to determine 
-// if the robot is currently reversing. If it detects reverse motion it will
-// enable the toggling in the SysTick ISR
-//-----------------------------------------------------------------------------
 void check_for_reverse(void) 
 {
   //Variables to hold the volatile RC data
@@ -178,25 +175,4 @@ void buzz_init(void)
                                         IOMUX_PINCM26_PF_GPIOB_DIO09;
 
   GPIOB->DOE31_0 |= GPIO_DOE31_0_DIO9_ENABLE;
-}
-
-//-----------------------------------------------------------------------------
-// set_drive_straight
-//-----------------------------------------------------------------------------
-// Checks if motor values are within a sertain range of each other and sets 
-// the Left value to the Right if they are This will make it easier to drive 
-// in a straight line
-//-----------------------------------------------------------------------------
-void set_drive_straight(void)
-{
-  uint16_t lmtr_val= g_rc_pw_us[L_MTR_RC_IN_CH];
-  uint16_t rmtr_val= g_rc_pw_us[R_MTR_RC_IN_CH];
-  uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
-  uint16_t scale_percent;
-  scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
-  //==============================================================
-  if (abs(lmtr_val - rmtr_val) <  SERVO_MIN_PULSE_WIDTH_DIFF_US)
-  {
-    lmtr_val = rmtr_val;
-  }
 }
