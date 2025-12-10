@@ -114,12 +114,12 @@ void SysTick_Handler(void)
     {
       if (is_buzzing == false)  //If statement for toggling the buzzer
       {
-        GPIOB->DOUT31_0 |= GPIO_DOUT31_0_DIO9_MASK;
+        GPIOB->DOESET31_0 = GPIO_DOUT31_0_DIO9_MASK;
         is_buzzing = true;      
       }
       else 
       {
-        GPIOB->DOUT31_0 &= ~GPIO_DOUT31_0_DIO9_MASK;
+        GPIOB->DOECLR31_0 = GPIO_DOUT31_0_DIO9_MASK;
         is_buzzing = false;
       }
       
