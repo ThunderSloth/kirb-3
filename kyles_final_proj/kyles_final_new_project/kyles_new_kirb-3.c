@@ -43,8 +43,10 @@ int main(void)
 
     while (1)
     {   
-      
-        set_drive_straight();  
+        uint32_t lmtr_val = g_rc_pw_us[L_MTR_RC_IN_CH];
+        uint32_t rmtr_val = g_rc_pw_us[R_MTR_RC_IN_CH];
+
+        lmtr_val = set_drive_straight();  
         check_for_reverse();    
         DL_Timer_setCaptureCompareValue(MOTOR_PWM_INST,
                                         lmtr_val,
@@ -187,16 +189,19 @@ void buzz_init(void)
 // the Left value to the Right if they are This will make it easier to drive 
 // in a straight line
 //-----------------------------------------------------------------------------
-void set_drive_straight(void)
+uint32_t set_drive_straight(void)
 {
   uint16_t lmtr_val= g_rc_pw_us[L_MTR_RC_IN_CH];
   uint16_t rmtr_val= g_rc_pw_us[R_MTR_RC_IN_CH];
-  uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
-  uint16_t scale_percent;
-  scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
+
   //==============================================================
   if (abs(lmtr_val - rmtr_val) <  SERVO_MIN_PULSE_WIDTH_DIFF_US)
   {
     lmtr_val = rmtr_val;
   }
+
+  return lmtr_val;
 }
+//uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
+//uint16_t scale_percent;
+//scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;

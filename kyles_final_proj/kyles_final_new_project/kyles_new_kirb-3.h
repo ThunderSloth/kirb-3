@@ -11,7 +11,7 @@
 // Function Initialization
 // -----------------------------------------------------------------------------
 void scale_motor_speed(void);
-void set_drive_straight(void);
+uint32_t set_drive_straight(void);
 void buzz_init(void);
 void check_for_reverse(void);
 // =============================================================================
