@@ -32,7 +32,7 @@ volatile uint16_t g_ult_pw_us[ULT_COUNT];
 // Sensor Index
 volatile uint8_t g_ult_idx = 0;
 
-//Flag used to control SysTick ISR
+//Flag used to control SysTick interrupts
 bool g_disable_buzzer = true;
 
 //-----------------------------------------------------------------------------
@@ -46,9 +46,9 @@ int main(void)
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++) {
         g_rc_pw_us[idx] = SERVO_NEUTRAL_PULSE_WIDTH_US;
     }
-
+    //Configures 
     config_init();
-
+    //Enables each interrupt handler
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_TIM1_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_IN_INT_IRQN);

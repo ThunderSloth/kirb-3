@@ -24,7 +24,7 @@ void check_for_reverse(void);
 #define SYS_TICK_PERIOD (10.25E-3)
 #define SYS_TICK_PERIOD_COUNT (SYS_TICK_PERIOD * MSPM0_CLOCK_FREQUENCY)
 
-
+//Buzzer pin constants
 #define SENS_BUZ_PIN                                                (0x00000200)
 #define SENS_BUZ_IOMUX                                           (IOMUX_PINCM26)
 #endif // KIRB_H_

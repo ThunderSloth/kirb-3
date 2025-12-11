@@ -15,24 +15,34 @@
 #include "LaunchPad.h"
 #include "clock.h"
 
+//Flag used to control SysTick interrupts
 bool g_disable_buzzer = true;
 
+//-----------------------------------------------------------------------------
+// main
+//-----------------------------------------------------------------------------
+// Main function that configures the peripherals, schedules the sensors, and
+// runs the main driving loop
+//-----------------------------------------------------------------------------
 int main(void)
 {
+    //Sets each rc input to the neutral pulse width
     for (RcIndex idx = 0; idx < RC_CH_COUNT; idx++)
     {
         g_rc_pw_us[idx] = SERVO_NEUTRAL_PULSE_WIDTH_US;
     }
-
+    //Sets each sensor value to max diatance
     for (UltIndex idx = 0; idx < ULT_COUNT; idx++)
     {
         g_ult_pw_us[idx] = ULT_INIT_PW;
     }
-
+    //Initializes the peripherals used 
     SYSCFG_DL_init();
     buzz_init();
     ping_init();
     sys_tick_init(SYS_TICK_PERIOD_COUNT);
+    
+    //Enable all of the IRQs used for the timers
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_TIM1_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
@@ -71,26 +81,57 @@ int main(void)
     }
 }
 
+//-----------------------------------------------------------------------------
+// RC_TIM0_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Interrupt handler for the TIM0 timer that will read input data from each 
+//  joystick on the RC controller.
+//  (Note - the x-axis of the right stick is read by TIM1)
+//-----------------------------------------------------------------------------
 void RC_TIM0_INST_IRQHandler(void)
 {
     rc_ch1_3_irq();
 }
 
+//-----------------------------------------------------------------------------
+// RC_TIM1_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Interrupt handler for the TIM1 timer that reads the input data from the 
+//  x-axis of the right joystick on the RC controller.
+//-----------------------------------------------------------------------------
 void RC_TIM1_INST_IRQHandler(void)
 {
     rc_ch4_irq();
 }
 
+//-----------------------------------------------------------------------------
+// GROUP1_IRQHandler
+//-----------------------------------------------------------------------------
+// GPIO interrupt handler for reading input data from the knobs (potentiometers)
+// on the RC controller
+//-----------------------------------------------------------------------------
 void GROUP1_IRQHandler(void)
 {
     rc_ch5_6_irq();
 }
 
+//-----------------------------------------------------------------------------
+// ULT_SCHED_TIM_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Interrupt handler used to schedule the activation of each ultrasonic sensor
+//  (one at a time).
+//-----------------------------------------------------------------------------
 void ULT_SCHED_TIM_INST_IRQHandler(void)
 {
     ult_sched_irq();
 }
 
+//-----------------------------------------------------------------------------
+// ULT_ECHO_TIM_INST_IRQHandler
+//-----------------------------------------------------------------------------
+//  Timer interrupt handler used to send the trigger signal to the current 
+//  ultrasonic sensor and read the resulting echo signal sent back.
+//-----------------------------------------------------------------------------
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
     ult_echo_irq();
@@ -129,6 +170,13 @@ void SysTick_Handler(void)
   }
 }
 
+//-----------------------------------------------------------------------------
+// check_for_reverse
+//-----------------------------------------------------------------------------
+// Function that will use the Y-axis data from the RC controller to determine 
+// if the robot is currently reversing. If it detects reverse motion it will
+// enable the toggling in the SysTick ISR
+//-----------------------------------------------------------------------------
 void check_for_reverse(void) 
 {
   //Variables to hold the volatile RC data
@@ -147,6 +195,11 @@ void check_for_reverse(void)
   }
 }
 
+//-----------------------------------------------------------------------------
+// buzz_init
+//-----------------------------------------------------------------------------
+// Initializes the GPIO pin used to control the buzzer (PB9)
+//-----------------------------------------------------------------------------
 void buzz_init(void)
 {
   //Configure IOMUX function and enable output for PB13 (Buzzer) 
@@ -176,6 +229,4 @@ uint32_t set_drive_straight(void)
 
   return lmtr_val;
 }
-//uint16_t var_res = g_rc_pw_us[RC_CH_VR_A];
-//uint16_t scale_percent;
-//scale_percent = (var_res - SERVO_MIN_PULSE_WIDTH_US)/SERVO_MIN_PULSE_WIDTH_US;
+

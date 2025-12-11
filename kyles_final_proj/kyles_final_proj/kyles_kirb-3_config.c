@@ -614,7 +614,7 @@ void rc_timer1_init(void)
 //-----------------------------------------------------------------------------
 // ult_echo_tim_init
 //-----------------------------------------------------------------------------
-
+//  Configures the echo input channel for the untrasonic sensors
 //-----------------------------------------------------------------------------
 void ult_echo_tim_init(void) {
     SYSCFG_DL_ULT_ECHO_TIM_init();
@@ -623,7 +623,7 @@ void ult_echo_tim_init(void) {
 //-----------------------------------------------------------------------------
 // ult_sched_tim_init
 //-----------------------------------------------------------------------------
-
+//  Configures the scheduling of the trig signal for the untrasonic sensors
 //-----------------------------------------------------------------------------
 void ult_sched_tim_init(void) {
     SYSCFG_DL_ULT_SCHED_TIM_init();
@@ -632,7 +632,7 @@ void ult_sched_tim_init(void) {
 //-----------------------------------------------------------------------------
 // ult_init
 //-----------------------------------------------------------------------------
-
+//  Configures the echo and scheduling before enabling the IO pins
 //-----------------------------------------------------------------------------
 void ult_init(void) {
     ult_echo_tim_init();
@@ -652,6 +652,14 @@ void ult_init(void) {
     ULT_SCHED_TIM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 }
 
+//-----------------------------------------------------------------------------
+// setCaptureCompareValue
+//-----------------------------------------------------------------------------
+//  Sets the capture compare value of a given timer
+//    Inputs:
+//      gptimer - struct that holds the timer data
+//      ccIndex - integer that represents the index of the CC register
+//-----------------------------------------------------------------------------
 void setCaptureCompareValue(
     GPTIMER_Regs *gptimer, uint32_t value, int ccIndex)
 {
@@ -663,6 +671,14 @@ void setCaptureCompareValue(
     *pReg = (value);
 }
 
+//-----------------------------------------------------------------------------
+// getCaptureCompareValue
+//-----------------------------------------------------------------------------
+//  Gets the capture compare value from the given timer 
+//  Inputs:
+//    gptimer - struct that holds the timer data
+//    ccIndex - integer that represents the index of the CC register
+//-----------------------------------------------------------------------------
 uint32_t getCaptureCompareValue(
     GPTIMER_Regs *gptimer, int ccIndex)
 {
@@ -674,6 +690,13 @@ uint32_t getCaptureCompareValue(
     return (*pReg & GPTIMER_CC_01_CCVAL_MASK);
 }
 
+//-----------------------------------------------------------------------------
+// getTimerCount
+//-----------------------------------------------------------------------------
+//  Gets the current count of the given timer and returns it
+//  Inputs:
+//    gptimer - struct that holds the timer data
+//-----------------------------------------------------------------------------
 uint32_t getTimerCount(const GPTIMER_Regs *gptimer)
 {
     return (gptimer->COUNTERREGS.CTR & GPTIMER_CTR_CCTR_MASK);
