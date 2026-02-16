@@ -1,6 +1,7 @@
-# kirb-3
-Code and resources related to Kirb-3, a remote controlled, distance sensing robot. Our goal is to replace the old DRAGON12-Plus2 Rev. D Trainer Board and Arduino Nano with a TI LP-MSPM0G3507.
+# Kinematic Intelligent Ranging Bot (KIRB-3)
+Code and resources for Kirb-3, a remote-controlled, distance-sensing robot built around the TI LP-MSPM0G3507. The project replaces legacy trainer-board hardware with a purpose-built embedded platform and currently supports multi-channel RC control alongside a round-robin ultrasonic sensing array. Development is ongoing as encoder feedback is introduced as the first step toward odometry and future mapping capabilities.
 
 
-![KIRB-3](assets/Kirb-3_logo.png "KIRB-3")
-![KIRB-3](assets/Kirb-3.png "KIRB-3")
+<p align="center">
+  <img src="assets/Kirb-3_graphic.png" width="650" />
+</p>
