@@ -1,6 +1,7 @@
 #include "kirb-3.h"
 
 #include "cmd_shell.h"
+#include "encoder.h"
 #include "motor.h"
 #include "ping.h"
 #include "rc.h"
@@ -23,14 +24,22 @@ int main(void)
 
     SYSCFG_DL_init();
     ping_init();
+    encoder_init();
 
     NVIC_EnableIRQ(RC_TIM0_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_TIM1_INST_INT_IRQN);
     NVIC_EnableIRQ(RC_IN_INT_IRQN);
     NVIC_EnableIRQ(ULT_SCHED_TIM_INST_INT_IRQN);
     NVIC_EnableIRQ(ULT_ECHO_TIM_INST_INT_IRQN);
+    NVIC_EnableIRQ(UART_ENCODER_INST_INT_IRQN);
+
+    arm_encoder_dma();
 
     cmd_shell_print_boot_msg();
+
+    // uart tx testing
+    uart_encoder_query(0xA, 0);
+    uart_encoder_query(0xC, 0);
 
     while (1)
     {
@@ -70,4 +79,9 @@ void ULT_SCHED_TIM_INST_IRQHandler(void)
 void ULT_ECHO_TIM_INST_IRQHandler(void)
 {
     ult_echo_irq();
+}
+
+void UART_ENCODER_INST_IRQHandler(void)
+{
+    uart_encoder_irq();
 }

@@ -18,19 +18,19 @@ void UART_debug_putc(char c)
 {
     if (c == '\n')
     {
-        DL_UART_Main_transmitData(UART_DEBUG_INST, (uint8_t) '\r');
+        DL_UART_Main_transmitData(UART_DEBUG_INST, (uint8_t)'\r');
         while (!DL_UART_Main_isTXFIFOEmpty(UART_DEBUG_INST))
         {
         }
     }
 
-    DL_UART_Main_transmitData(UART_DEBUG_INST, (uint8_t) c);
+    DL_UART_Main_transmitData(UART_DEBUG_INST, (uint8_t)c);
     while (!DL_UART_Main_isTXFIFOEmpty(UART_DEBUG_INST))
     {
     }
 }
 
-void UART_debug_print(const char* s)
+void UART_debug_print(const char *s)
 {
     while (*s)
     {
@@ -38,7 +38,7 @@ void UART_debug_print(const char* s)
     }
 }
 
-void UART_debug_println(const char* s)
+void UART_debug_println(const char *s)
 {
     UART_debug_print(s);
     UART_debug_putc('\n');
@@ -49,7 +49,7 @@ char UART_debug_getc(void)
     while (DL_UART_Main_isRXFIFOEmpty(UART_DEBUG_INST))
     {
     }
-    return (char) DL_UART_Main_receiveData(UART_DEBUG_INST);
+    return (char)DL_UART_Main_receiveData(UART_DEBUG_INST);
 }
 
 bool UART_debug_available(void)
@@ -57,9 +57,9 @@ bool UART_debug_available(void)
     return !DL_UART_Main_isRXFIFOEmpty(UART_DEBUG_INST);
 }
 
-void UART_debug_printf(const char* fmt, ...)
+void UART_debug_printf(const char *fmt, ...)
 {
-    char    buf[UART_DEBUG_BUF_SIZE];
+    char buf[UART_DEBUG_BUF_SIZE];
     va_list args;
 
     va_start(args, fmt);
@@ -68,8 +68,8 @@ void UART_debug_printf(const char* fmt, ...)
 
     if (n < 0)
         return;
-    if (n > (int) sizeof(buf))
-        n = (int) sizeof(buf);
+    if (n > (int)sizeof(buf))
+        n = (int)sizeof(buf);
 
     for (int i = 0; i < n; i++)
     {

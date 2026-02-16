@@ -2488,10 +2488,6 @@
 		(uuid "59d8af90-a3a8-4016-a804-ff03f23832a8")
 	)
 	(no_connect
-		(at 165.1 72.39)
-		(uuid "6a329f5b-aab7-4025-903b-08b68302ad64")
-	)
-	(no_connect
 		(at 165.1 66.04)
 		(uuid "76fd0389-325f-4a41-8ecc-5eb9a9932c79")
 	)
@@ -2710,7 +2706,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 72.39) (xy 167.64 72.39)
+			(xy 156.21 72.39) (xy 160.02 72.39)
 		)
 		(stroke
 			(width 0)
@@ -3360,7 +3356,7 @@
 	)
 	(wire
 		(pts
-			(xy 165.1 91.44) (xy 167.64 91.44)
+			(xy 157.48 91.44) (xy 167.64 91.44)
 		)
 		(stroke
 			(width 0)
@@ -4098,6 +4094,17 @@
 		)
 		(uuid "2675238d-3c03-4c0e-aa4b-47026bbea365")
 	)
+	(hierarchical_label "TRIG"
+		(shape bidirectional)
+		(at 156.21 72.39 180)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "333426ad-9da8-410a-95a2-4a8ea7227d07")
+	)
 	(hierarchical_label "PWM_MTR[1..2]"
 		(shape output)
 		(at 77.47 182.88 0)
@@ -4164,9 +4171,9 @@
 		)
 		(uuid "8b422013-40df-47fe-86f0-1c9fb926235b")
 	)
-	(hierarchical_label "PING_IO"
+	(hierarchical_label "ECHO"
 		(shape bidirectional)
-		(at 165.1 91.44 180)
+		(at 157.48 91.44 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5715,6 +5722,73 @@
 			(project "KIRB"
 				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/f7853a98-918c-411e-85ae-dd3031adf4af"
 					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R_US")
+		(at 163.83 72.39 90)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6f820ce2-2278-4a18-8278-a5b58e18a805")
+		(property "Reference" "R36"
+			(at 163.83 68.58 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "0 Ω"
+			(at 163.83 70.358 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 164.084 71.374 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 163.83 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor, US symbol"
+			(at 163.83 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e41ca389-5e23-447a-b01a-54d9d462dfdc")
+		)
+		(pin "2"
+			(uuid "aec79731-d2a9-44e8-8fa5-40a3acc2e736")
+		)
+		(instances
+			(project "KIRB"
+				(path "/0a51f53b-36a2-49a0-b5b8-e2ed0cb11e2a/f7853a98-918c-411e-85ae-dd3031adf4af"
+					(reference "R36")
 					(unit 1)
 				)
 			)

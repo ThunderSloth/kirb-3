@@ -30,7 +30,7 @@ UltSensor g_ult[ULT_COUNT] = {
         {
             .angle_deg = ULT3_ANGLE_DEG,
             .angle_rad = ULT3_ANGLE_DEG * DEG_TO_RAD,
-            .enabled = false,
+            .enabled = true,
         },
     [ULT4_IDX] =
         {
@@ -76,10 +76,10 @@ UltSensor g_ult[ULT_COUNT] = {
 volatile uint16_t g_ult_pw_us[ULT_COUNT];
 
 // Scheduler index: which sensor will be pinged next
-volatile uint8_t g_ult_idx = 7;
+volatile uint8_t g_ult_idx = ULT0_IDX;
 
 // Latched index: which sensor this *current* ping/echo belongs to
-volatile uint8_t g_ult_active_idx = 7;
+volatile uint8_t g_ult_active_idx = ULT0_IDX;
 
 // Float conversions for formatted display
 float ping_us_to_cm_float(float pulse_width_us)
