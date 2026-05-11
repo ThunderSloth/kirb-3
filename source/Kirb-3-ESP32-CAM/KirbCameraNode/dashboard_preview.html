@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kirb Dashboard Preview</title>
+  <style>
+    :root {
+      --bg: #0f1418;
+      --panel: rgba(23, 29, 35, 0.9);
+      --panel-strong: rgba(17, 22, 27, 0.98);
+      --text: #d8dee7;
+      --muted: #93a0ad;
+      --accent: #e38b45;
+      --ok: #9fe870;
+      --shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+      --radius: 20px;
+      --center-col-max: 610px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(227, 139, 69, 0.1), transparent 24%),
+        radial-gradient(circle at top right, rgba(159, 232, 112, 0.08), transparent 28%),
+        linear-gradient(180deg, #0f1418 0%, #131a20 48%, #10161b 100%);
+    }
+
+    .shell { width: min(1300px, calc(100vw - 20px)); margin: 0 auto; padding: 12px 0 18px; }
+    .hero {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center;
+      margin-bottom: 12px; padding: 12px 16px; border-radius: 26px;
+      border: 1px solid rgba(227, 139, 69, 0.12);
+      background: linear-gradient(135deg, rgba(28, 36, 43, 0.96), rgba(19, 25, 31, 0.92));
+      box-shadow: var(--shadow);
+    }
+    .title-main {
+      margin: 0; text-align: center; font-size: clamp(1.8rem, 4.1vw, 3.1rem);
+      line-height: 1; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 999px;
+      background: rgba(20, 26, 31, 0.92); border: 1px solid rgba(227, 139, 69, 0.14);
+      color: var(--ok); font-weight: 700; white-space: nowrap;
+    }
+    .status-pill::before {
+      content: ""; width: 11px; height: 11px; border-radius: 50%;
+      background: var(--ok); box-shadow: 0 0 0 4px rgba(159, 232, 112, 0.12);
+    }
+
+    .dashboard-scroll { overflow: visible; padding-right: 0; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(210px, 260px) minmax(0, 1fr) minmax(210px, 260px);
+      gap: 12px; align-items: start;
+    }
+    .stack { display: grid; gap: 12px; }
+    .layout > .stack:nth-child(2) {
+      width: 100%;
+      max-width: var(--center-col-max);
+      justify-self: center;
+    }
+    .panel {
+      border: 1px solid rgba(227, 139, 69, 0.08);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 9px 14px 7px;
+      border-bottom: 1px solid rgba(227, 139, 69, 0.07);
+      background: linear-gradient(180deg, rgba(227, 139, 69, 0.03), rgba(227, 139, 69, 0));
+    }
+    .panel-header h2, .panel-header h3 {
+      margin: 0; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .panel-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .unit-select {
+      border: 1px solid rgba(227, 139, 69, 0.12);
+      border-radius: 999px;
+      background: rgba(20, 26, 31, 0.92);
+      color: #d8dee7;
+      font: inherit;
+      padding: 6px 12px;
+      min-height: 34px;
+    }
+    .panel-body { padding: 9px 14px 10px; }
+    .metric-grid { display: grid; gap: 8px; }
+    .metric-row {
+      display: grid; grid-template-columns: 56px 1fr 64px; gap: 12px; align-items: center;
+      padding: 6px 10px; border-radius: 14px; background: rgba(27, 34, 40, 0.9);
+      border: 1px solid rgba(227, 139, 69, 0.06);
+    }
+    .metric-row.metric-disabled {
+      background: rgba(22, 27, 32, 0.7); border-color: rgba(147, 160, 173, 0.12);
+    }
+    .metric-row.metric-disabled .metric-name,
+    .metric-row.metric-disabled .metric-value { color: var(--muted); }
+    .metric-name { font-weight: 700; color: #c8d2de; }
+    .metric-value { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+    .metric-bar { height: 8px; border-radius: 999px; background: rgba(227, 139, 69, 0.12); overflow: hidden; }
+    .metric-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7c5a35, var(--accent)); }
+    .metric-bar-centered { position: relative; height: 8px; border-radius: 999px; background: rgba(227, 139, 69, 0.1); overflow: hidden; }
+    .metric-bar-centered::before {
+      content: ""; position: absolute; left: calc(50% - 1px); top: 0; width: 2px; height: 100%;
+      background: rgba(216, 222, 231, 0.35);
+    }
+    .metric-fill-centered { position: absolute; top: 0; height: 100%; background: linear-gradient(90deg, #7c5a35, var(--accent)); }
+    .stream-panel { background: linear-gradient(180deg, rgba(11, 16, 20, 0.98), rgba(14, 20, 24, 0.96)); }
+    .stream-wrap { padding: 12px; }
+    .stream-stage {
+      aspect-ratio: 1.18 / 1; border-radius: 20px; overflow: hidden;
+      border: 1px solid rgba(227, 139, 69, 0.12);
+      background:
+        radial-gradient(circle at top, rgba(227, 139, 69, 0.08), transparent 34%),
+        linear-gradient(180deg, #080b0e, #0b1014);
+      display: grid; place-items: center; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.9rem;
+    }
+    .console {
+      margin-top: 0;
+    }
+    .console-body {
+      display: grid;
+      gap: 10px;
+    }
+    .command-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .prompt-prefix {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(159, 232, 112, 0.18);
+      background: rgba(159, 232, 112, 0.08);
+      color: #bdf58a;
+      font: 1.05rem/1 "Courier New", monospace;
+      font-weight: 700;
+    }
+    .command-row input {
+      width: 100%;
+      min-width: 0;
+      min-height: 48px;
+      padding: 14px 16px;
+      border: 1px solid rgba(159, 232, 112, 0.18);
+      border-radius: 14px;
+      background: var(--panel-strong);
+      color: #d7ffb9;
+      font: inherit;
+      box-shadow: inset 0 0 0 1px rgba(159, 232, 112, 0.05);
+      caret-color: #9fe870;
+    }
+    .command-row input:focus {
+      outline: none;
+      border-color: rgba(159, 232, 112, 0.34);
+      box-shadow:
+        inset 0 0 0 1px rgba(159, 232, 112, 0.08),
+        0 0 0 3px rgba(159, 232, 112, 0.08);
+    }
+    .command-row button {
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4f9a35, #9fe870);
+      color: #081018;
+      font: inherit;
+      font-weight: 700;
+      min-height: 48px;
+      padding: 0 18px;
+      cursor: default;
+    }
+    .log {
+      height: clamp(118px, 18vh, 210px);
+      min-height: 0;
+      margin: 0;
+      padding: 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(12, 17, 21, 0.98), rgba(14, 20, 24, 0.98));
+      color: #d7ffb9;
+      overflow: auto;
+      font: 0.92rem/1.45 "Courier New", monospace;
+      white-space: pre-wrap;
+      border: 1px solid rgba(227, 139, 69, 0.08);
+      scrollbar-color: rgba(159, 232, 112, 0.42) rgba(12, 17, 21, 0.8);
+      scrollbar-width: thin;
+    }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="status-pill">Last Update 12:34:56</div>
+      <h1 class="title-main">KIRB-3 DASHBOARD</h1>
+      <div class="status-pill">Preview Mode</div>
+    </section>
+
+    <section class="dashboard-scroll">
+      <main class="layout">
+        <div class="stack" id="left-stack">
+          <section class="panel">
+            <div class="panel-header"><h2>RC Inputs</h2><span>µs</span></div>
+            <div class="panel-body"><div class="metric-grid" id="rc-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header"><h2>Drive Outputs</h2><span>µs</span></div>
+            <div class="panel-body"><div class="metric-grid" id="drive-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header"><h2>Accel</h2><span>g</span></div>
+            <div class="panel-body"><div class="metric-grid" id="accel-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header"><h2>Gyro</h2><span>dps</span></div>
+            <div class="panel-body"><div class="metric-grid" id="gyro-grid"></div></div>
+          </section>
+        </div>
+
+        <div class="stack" id="center-stack">
+          <section class="panel stream-panel">
+            <div class="panel-header"><h2>Video Feed</h2><span>Preview</span></div>
+            <div class="stream-wrap">
+              <div class="stream-stage" id="stream-stage">Camera Preview Placeholder</div>
+            </div>
+          </section>
+          <section class="panel console">
+            <div class="panel-header"><h3>Command Console</h3><span>Preview</span></div>
+            <div class="panel-body">
+              <div class="console-body">
+                <pre class="log">[boot] KirbCamBridge dashboard loaded
+[preview] Static layout review page
+[preview] Three-column layout with terminal under video
+</pre>
+                <form>
+                  <div class="command-row">
+                    <span class="prompt-prefix">&gt;</span>
+                    <input type="text" placeholder="">
+                    <button type="submit">Send</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="stack">
+          <section class="panel">
+            <div class="panel-header"><h2>Power</h2><span>V</span></div>
+            <div class="panel-body"><div class="metric-grid" id="power-grid"></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Ultrasonic</h2>
+              <div class="panel-tools">
+                <select class="unit-select" id="ult-unit-select">
+                  <option value="cm" selected>cm</option>
+                  <option value="m">m</option>
+                  <option value="ftin">ft/in</option>
+                  <option value="pw">pw (us)</option>
+                </select>
+              </div>
+            </div>
+            <div class="panel-body"><div class="metric-grid" id="ult-grid"></div></div>
+          </section>
+          <section class="panel">
+          <div class="panel-header"><h2>Encoders</h2><span>counts</span></div>
+          <div class="panel-body"><div class="metric-grid" id="encoder-grid"></div></div>
+        </section>
+        </div>
+      </main>
+    </section>
+  </div>
+
+  <script>
+    const preview = {
+      rc: [1488, 1522, 1495, 1510, 1700, 1320],
+      ult: [4120, 3890, 0, 5210, 6180, 0, 7440, 8150, 9020, 10110],
+      ult_en: [1, 1, 0, 1, 1, 0, 1, 1, 1, 1],
+      mtr: [1540, 1465],
+      srv: [1610, 1385],
+      bat_mv: 11840,
+      imu_ok: true,
+      imu_accel_mg: [512, 811, -294],
+      imu_gyro_mdps: [375, -210, 88],
+      enc_valid: [true, true],
+      enc: [12480, -9380]
+    };
+
+    function buildMetricRows(container, prefix, count) {
+      for (let i = 0; i < count; i += 1) {
+        const row = document.createElement("div");
+        row.className = "metric-row";
+        row.id = prefix.toLowerCase() + "-row-" + i;
+        row.innerHTML =
+          '<span class="metric-name">' + prefix + i + '</span>' +
+          '<div class="metric-bar"><div class="metric-fill" id="' + prefix.toLowerCase() + '-fill-' + i + '"></div></div>' +
+          '<span class="metric-value" id="' + prefix.toLowerCase() + '-value-' + i + '">0</span>';
+        container.appendChild(row);
+      }
+    }
+
+    function buildCenteredMetricRows(container, names) {
+      for (let i = 0; i < names.length; i += 1) {
+        const row = document.createElement("div");
+        row.className = "metric-row";
+        row.id = names[i].toLowerCase() + "-row";
+        row.innerHTML =
+          '<span class="metric-name">' + names[i] + '</span>' +
+          '<div class="metric-bar-centered"><div class="metric-fill-centered" id="' + names[i].toLowerCase() + '-fill"></div></div>' +
+          '<span class="metric-value" id="' + names[i].toLowerCase() + '-value">0</span>';
+        container.appendChild(row);
+      }
+    }
+
+    function buildNamedMetricRows(container, names) {
+      for (let i = 0; i < names.length; i += 1) {
+        const row = document.createElement("div");
+        row.className = "metric-row";
+        row.innerHTML =
+          '<span class="metric-name">' + names[i] + '</span>' +
+          '<div class="metric-bar"><div class="metric-fill" id="' + names[i].toLowerCase() + '-fill"></div></div>' +
+          '<span class="metric-value" id="' + names[i].toLowerCase() + '-value">0</span>';
+        container.appendChild(row);
+      }
+    }
+
+    function updateCenteredMetric(name, value, neutral, span, labelText) {
+      const fill = document.getElementById(name.toLowerCase() + "-fill");
+      const label = document.getElementById(name.toLowerCase() + "-value");
+      const normalized = Math.max(-1, Math.min(1, (value - neutral) / span));
+      const width = Math.abs(normalized) * 50;
+
+      if (normalized >= 0) {
+        fill.style.left = "50%";
+        fill.style.borderRadius = "0 999px 999px 0";
+      } else {
+        fill.style.left = (50 - width) + "%";
+        fill.style.borderRadius = "999px 0 0 999px";
+      }
+
+      fill.style.width = width + "%";
+      label.textContent = labelText;
+    }
+
+    function updateMetric(prefix, index, value, min, max, labelText) {
+      const fill = document.getElementById(prefix + "-fill-" + index);
+      const label = document.getElementById(prefix + "-value-" + index);
+      const clamped = Math.max(min, Math.min(max, value));
+      const percent = ((clamped - min) / (max - min)) * 100;
+      fill.style.width = percent.toFixed(1) + "%";
+      label.textContent = labelText;
+    }
+
+    function setUnavailable(name) {
+      const row = document.getElementById(name.toLowerCase() + "-row");
+      row.classList.add("metric-disabled");
+      document.getElementById(name.toLowerCase() + "-value").textContent = "--";
+      document.getElementById(name.toLowerCase() + "-fill").style.width = "0%";
+    }
+
+    function tuneCenterColumnWidth() {
+      const leftStack = document.getElementById("left-stack");
+      const centerStack = document.getElementById("center-stack");
+      const streamStage = document.getElementById("stream-stage");
+
+      if (!leftStack || !centerStack || !streamStage) {
+        return;
+      }
+
+      const wideLayout = window.innerWidth > 980;
+      if (!wideLayout) {
+        document.documentElement.style.setProperty("--center-col-max", "100%");
+        return;
+      }
+
+      const centerRect = centerStack.getBoundingClientRect();
+      const streamRect = streamStage.getBoundingClientRect();
+      const leftHeight = leftStack.getBoundingClientRect().height;
+      const currentHeight = centerRect.height;
+      const currentWidth = centerRect.width;
+      const videoHeight = streamRect.height;
+
+      if (currentHeight <= 0 || currentWidth <= 0 || videoHeight <= 0) {
+        return;
+      }
+
+      const targetHeight = leftHeight;
+      const heightDelta = targetHeight - currentHeight;
+      const desiredVideoHeight = videoHeight + heightDelta;
+      const minVideoHeight = 220;
+      const maxVideoHeight = 620;
+      const clampedVideoHeight = Math.max(minVideoHeight, Math.min(maxVideoHeight, desiredVideoHeight));
+      const desiredWidth = clampedVideoHeight * 1.18;
+      const cappedWidth = Math.min(Math.max(desiredWidth, 420), 680);
+
+      document.documentElement.style.setProperty("--center-col-max", cappedWidth.toFixed(1) + "px");
+    }
+
+    buildCenteredMetricRows(document.getElementById("rc-grid"), ["RC0", "RC1", "RC2", "RC3", "RC4", "RC5"]);
+    buildCenteredMetricRows(document.getElementById("drive-grid"), ["MTR0", "MTR1", "PAN", "TILT"]);
+    buildMetricRows(document.getElementById("ult-grid"), "ULT", 10);
+    buildNamedMetricRows(document.getElementById("power-grid"), ["BAT"]);
+    buildCenteredMetricRows(document.getElementById("accel-grid"), ["AX", "AY", "AZ"]);
+    buildCenteredMetricRows(document.getElementById("gyro-grid"), ["GX", "GY", "GZ"]);
+    buildCenteredMetricRows(document.getElementById("encoder-grid"), ["ENC0", "ENC1"]);
+
+    preview.rc.forEach((value, i) => updateCenteredMetric("RC" + i, value, 1500, 500, Math.round(value)));
+    updateCenteredMetric("MTR0", preview.mtr[0], 1500, 500, Math.round(preview.mtr[0]));
+    updateCenteredMetric("MTR1", preview.mtr[1], 1500, 500, Math.round(preview.mtr[1]));
+    updateCenteredMetric("PAN", preview.srv[0], 1500, 500, Math.round(preview.srv[0]));
+    updateCenteredMetric("TILT", preview.srv[1], 1500, 500, Math.round(preview.srv[1]));
+
+    preview.ult.forEach((value, i) => {
+      if (!preview.ult_en[i]) {
+        document.getElementById("ult-row-" + i).classList.add("metric-disabled");
+        document.getElementById("ult-value-" + i).textContent = "--";
+        document.getElementById("ult-fill-" + i).style.width = "0%";
+        return;
+      }
+      const cm = value / 58.0;
+      updateMetric("ult", i, cm, 0, 200, cm.toFixed(1));
+    });
+
+    document.getElementById("bat-fill").style.width = (((preview.bat_mv / 1000.0) - 10.5) / (12.6 - 10.5) * 100).toFixed(1) + "%";
+    document.getElementById("bat-value").textContent = (preview.bat_mv / 1000.0).toFixed(2);
+
+    if (preview.imu_ok) {
+      updateCenteredMetric("AX", preview.imu_accel_mg[0] / 1000.0, 0, 2, (preview.imu_accel_mg[0] / 1000.0).toFixed(3));
+      updateCenteredMetric("AY", preview.imu_accel_mg[1] / 1000.0, 0, 2, (preview.imu_accel_mg[1] / 1000.0).toFixed(3));
+      updateCenteredMetric("AZ", preview.imu_accel_mg[2] / 1000.0, 0, 2, (preview.imu_accel_mg[2] / 1000.0).toFixed(3));
+      updateCenteredMetric("GX", preview.imu_gyro_mdps[0] / 1000.0, 0, 250, (preview.imu_gyro_mdps[0] / 1000.0).toFixed(2));
+      updateCenteredMetric("GY", preview.imu_gyro_mdps[1] / 1000.0, 0, 250, (preview.imu_gyro_mdps[1] / 1000.0).toFixed(2));
+      updateCenteredMetric("GZ", preview.imu_gyro_mdps[2] / 1000.0, 0, 250, (preview.imu_gyro_mdps[2] / 1000.0).toFixed(2));
+    }
+
+    preview.enc.forEach((value, i) => {
+      const name = "ENC" + i;
+      updateCenteredMetric(name, value, 0, 32768, value);
+      if (!preview.enc_valid[i]) {
+        document.getElementById(name.toLowerCase() + "-row").classList.add("metric-disabled");
+      }
+    });
+
+    tuneCenterColumnWidth();
+    window.addEventListener("resize", tuneCenterColumnWidth);
+  </script>
+</body>
+</html>
