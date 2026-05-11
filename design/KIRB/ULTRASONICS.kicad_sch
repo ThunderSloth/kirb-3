@@ -3,9 +3,9 @@
 	(generator "eeschema")
 	(generator_version "9.0")
 	(uuid "cbce0ec4-3be5-4d2a-aaee-e3ab2535d180")
-	(paper "A4")
+	(paper "USLetter")
 	(title_block
-		(title "Ultrasonic Sensing System")
+		(title "Kinematic Intelligent Ranging Bot (KIRB-3)")
 		(date "2025-12-01")
 	)
 	(lib_symbols

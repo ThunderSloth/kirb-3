@@ -5,7 +5,7 @@
 	(uuid "c4ed9088-6d4d-49c5-9aab-dc042795abe7")
 	(paper "USLetter")
 	(title_block
-		(title "Motor Drive System")
+		(title "Kinematic Intelligent Ranging Bot (KIRB-3)")
 	)
 	(lib_symbols
 		(symbol "Connector_Generic:Conn_01x06"

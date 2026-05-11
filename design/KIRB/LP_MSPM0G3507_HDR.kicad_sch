@@ -5,7 +5,7 @@
 	(uuid "9efd8306-4de5-41b9-a8cb-b67b690adcb8")
 	(paper "USLetter")
 	(title_block
-		(title "LP-MSPM0G3507 Headers")
+		(title "Kinematic Intelligent Ranging Bot (KIRB-3)")
 		(date "2025-11-30")
 	)
 	(lib_symbols

@@ -5,7 +5,7 @@
 	(uuid "2b491116-08fc-4479-8ce6-1bbcd5f55728")
 	(paper "USLetter")
 	(title_block
-		(title "Power Distribution System")
+		(title "Kinematic Intelligent Ranging Bot (KIRB-3)")
 	)
 	(lib_symbols
 		(symbol "Connector:Conn_01x04_Pin"

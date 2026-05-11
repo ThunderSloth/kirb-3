@@ -45,6 +45,168 @@
                 "name": "Kirb-3-MSPM0G3507",
                 "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.syscfg"
             }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (2)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/README.md"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (3)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/motor.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (4)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/cmd_core.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (5)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/cmd_shell.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (6)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/encoder.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (7)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/kirb-3.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (8)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/Debug/command_bridge.d"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (9)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/Debug/cmd_core.o"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (10)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/imu.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (11)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/encoder.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (12)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/cmd_core.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (13)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/cmd_shell.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (14)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/command_bridge.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (15)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/command_bridge.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (16)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/motor.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (17)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/rc.h"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (18)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/rc.c"
+            }
+        },
+        {
+            "name": "Kirb-3-MSPM0G3507 (19)",
+            "type": "ccs-debug",
+            "request": "launch",
+            "projectInfo": {
+                "name": "Kirb-3-MSPM0G3507",
+                "resourceId": "/Kirb-3-MSPM0G3507/ping.c"
+            }
         }
     ]
 }

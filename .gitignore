@@ -109,3 +109,4 @@ doc/src/build/
 
 # Misc generated artifacts in this repo
 filelist.txt
+logs/
