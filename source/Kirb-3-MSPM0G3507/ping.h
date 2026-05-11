@@ -1,6 +1,10 @@
 #ifndef PING_H
 #define PING_H
 
+/** @file ping.h
+ *  @brief Multiplexed ultrasonic PING))) sensor scheduler and conversion API.
+ */
+
 #include "kirb-3.h"
 #include <stdint.h>
 
@@ -25,9 +29,11 @@
 
 #define ULT_ECHO_MIN_US 150
 #define ULT_ECHO_MAX_US 20000
+#define ULT_MAX_INVALID_HOLD 2u
 
 #define ULT_INIT_PW (-1)
 
+/** Logical ultrasonic sensor index. */
 typedef enum
 {
     ULT0_IDX = 0,
@@ -70,6 +76,7 @@ typedef enum
 #define ULT8_ANGLE_DEG (215.8f)
 #define ULT9_ANGLE_DEG (251.6f)
 
+/** Fixed physical metadata and enable flag for one ultrasonic sensor. */
 typedef struct
 {
     float angle_deg;
@@ -77,6 +84,7 @@ typedef struct
     bool enabled;
 } UltSensor;
 
+/** Physical sensor table indexed by UltIndex. */
 extern UltSensor g_ult[];
 
 #define DEG_TO_RAD (3.14159265358979323846f / 180.0f)
@@ -84,6 +92,7 @@ extern UltSensor g_ult[];
 #define ULTS_PER_MUX (5)
 #define TRIG_PW_US (5)
 
+/** Mux enable branch index. */
 typedef enum
 {
     MUX1_IDX,
@@ -91,6 +100,7 @@ typedef enum
     MUX_COUNT,
 } MuxIndex;
 
+/** GPIO mapping for one active-low mux enable line. */
 typedef struct
 {
     GPIO_Regs *gpio_port;
@@ -115,6 +125,7 @@ static const MuxEnConfig g_mux_en_cfg[MUX_COUNT] = {
 
 #define MUX_SEL_COUNT (3)
 
+/** GPIO mapping for one mux channel-select line. */
 typedef struct
 {
     GPIO_Regs *gpio_port;
@@ -143,13 +154,13 @@ static const MuxSelConfig g_mux_sel_cfg[MUX_SEL_COUNT] = {
 // Integer Conversion (fast, MCU-friendly)
 // -----------------------------------------------------------------------------
 
-// Convert pulse width (µs) to whole centimeters.
+/** Convert pulse width in microseconds to whole centimeters. */
 static inline uint32_t ping_us_to_cm_int(uint32_t pulse_width_us)
 {
     return pulse_width_us / PING_US_PER_CM;
 }
 
-// Convert pulse width (µs) to whole inches.
+/** Convert pulse width in microseconds to whole inches. */
 static inline uint32_t ping_us_to_in_int(uint32_t pulse_width_us)
 {
     return pulse_width_us / PING_US_PER_IN;
@@ -159,16 +170,28 @@ static inline uint32_t ping_us_to_in_int(uint32_t pulse_width_us)
 // Float Conversion (for display)
 // -----------------------------------------------------------------------------
 
+/** Convert pulse width in microseconds to centimeters. */
 float ping_us_to_cm_float(float pulse_width_us);
+
+/** Convert pulse width in microseconds to inches. */
 float ping_us_to_in_float(float pulse_width_us);
+
+/** Convert pulse width in microseconds to meters. */
 float ping_us_to_m_float(float pulse_width_us);
+
+/** Convert pulse width in microseconds to feet. */
 float ping_us_to_ft_float(float pulse_width_us);
 
+/** Initialize ultrasonic state, mux/buffer routing, and scheduler timer. */
 void ping_init(void);
 
+/** Handle echo capture interrupts for the active ultrasonic sensor. */
 void ult_echo_irq(void);
+
+/** Handle scheduler interrupts that advance and trigger ultrasonic pings. */
 void ult_sched_irq(void);
 
+/** Latest filtered echo pulse widths, in microseconds. */
 extern volatile uint16_t g_ult_pw_us[];
 
 #endif // PING_H

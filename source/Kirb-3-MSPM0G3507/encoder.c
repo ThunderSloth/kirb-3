@@ -1,7 +1,12 @@
 #include "encoder.h"
+
+#include "kirb-3.h"
 #include "ti/devices/msp/peripherals/hw_uart.h"
-#include "ti_msp_dl_config.h"
-#include "uart_debug.h"
+
+/** @file encoder.c
+ *  @brief Shared half-duplex UART polling for the Parallax position
+ *         controllers.
+ */
 
 #define UART_ENCODER_CLEAR_MASK                                                \
     (DL_UART_INTERRUPT_DMA_DONE_RX | DL_UART_INTERRUPT_OVERRUN_ERROR |         \
@@ -9,196 +14,277 @@
      DL_UART_INTERRUPT_BREAK_ERROR | DL_UART_INTERRUPT_NOISE_ERROR |           \
      DL_UART_INTERRUPT_RX_TIMEOUT_ERROR)
 
-volatile bool g_encoder_rx_done = false;
-volatile uint8_t g_encoder_rx_packet[ENCODER_RX_PACKET_SIZE];
+#define ENCODER_WAIT_TX_TIMEOUT (20000u)
+#define ENCODER_WAIT_RX_TIMEOUT (120000u)
 
-static const Encoder encoders[ENCODER_COUNT] = {
-    [ENCODER1_IDX] =
-        {
-            .addr = 1,
-        },
-    [ENCODER2_IDX] =
-        {
-            .addr = 2,
-        },
+typedef enum
+{
+    ENCODER_STATE_IDLE = 0,
+    ENCODER_STATE_WAIT_TX_DONE,
+    ENCODER_STATE_WAIT_RX_DONE,
+} EncoderState;
+
+volatile bool g_encoder_rx_done = false;
+volatile bool g_encoder_valid[ENCODER_COUNT] = {false};
+volatile uint8_t g_encoder_rx_packet[ENCODER_RX_PACKET_SIZE] = {0u};
+volatile uint8_t g_encoder_last_packet[ENCODER_COUNT]
+                                      [ENCODER_RX_PACKET_SIZE] = {{0u}};
+volatile int16_t g_encoder_count[ENCODER_COUNT] = {0};
+volatile uint32_t g_encoder_success_count[ENCODER_COUNT] = {0u};
+volatile uint32_t g_encoder_error_count[ENCODER_COUNT] = {0u};
+
+static const Encoder g_encoders[ENCODER_COUNT] = {
+    [ENCODER1_IDX] = {.addr = 1u},
+    [ENCODER2_IDX] = {.addr = 2u},
 };
 
-void encoder_init(void)
+static volatile EncoderState g_encoder_state = ENCODER_STATE_IDLE;
+static volatile EncoderIndex g_encoder_active_idx = ENCODER1_IDX;
+static volatile EncoderIndex g_encoder_next_idx = ENCODER1_IDX;
+static volatile bool g_encoder_poll_due = false;
+static volatile uint32_t g_encoder_wait_countdown = 0u;
+
+/** Enable the MCU-to-encoder UART buffer. */
+static void encoder_tx_enable(void)
 {
-    DL_DMA_setSrcAddr(DMA, ENCODER_RX_CHAN_ID,
-                      (uint32_t)(&UART_ENCODER_INST->RXDATA));
+    DL_GPIO_clearPins(ENC_PORT, ENC_TX_N_OE_PIN);
 }
 
-void arm_encoder_dma(void)
+/** Disable the MCU-to-encoder UART buffer. */
+static void encoder_tx_disable(void)
 {
-    g_encoder_rx_done = false;
+    DL_GPIO_setPins(ENC_PORT, ENC_TX_N_OE_PIN);
+}
 
-    DL_DMA_disableChannel(DMA, ENCODER_RX_CHAN_ID);
+/** Enable the encoder-to-MCU UART buffer. */
+static void encoder_rx_enable(void)
+{
+    DL_GPIO_clearPins(ENC_PORT, ENC_RX_N_OE_PIN);
+}
 
-    // drain FIFO
+/** Disable the encoder-to-MCU UART buffer. */
+static void encoder_rx_disable(void)
+{
+    DL_GPIO_setPins(ENC_PORT, ENC_RX_N_OE_PIN);
+}
+
+/** Release both sides of the external UART buffer. */
+static void encoder_bus_idle(void)
+{
+    encoder_rx_disable();
+    encoder_tx_disable();
+}
+
+/** Drain stale bytes before arming DMA for a fresh response. */
+static void encoder_flush_rx(void)
+{
     while (!DL_UART_Main_isRXFIFOEmpty(UART_ENCODER_INST))
     {
         (void)DL_UART_Main_receiveData(UART_ENCODER_INST);
     }
+}
 
+/** Prepare DMA to capture exactly one two-byte encoder response. */
+static void encoder_arm_rx_dma(void)
+{
+    g_encoder_rx_done = false;
+    g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX] = 0u;
+    g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX] = 0u;
+
+    DL_DMA_disableChannel(DMA, ENCODER_RX_CHAN_ID);
+    encoder_flush_rx();
     DL_UART_Main_clearInterruptStatus(UART_ENCODER_INST,
                                       UART_ENCODER_CLEAR_MASK);
 
     DL_DMA_setDestAddr(DMA, ENCODER_RX_CHAN_ID,
                        (uint32_t)&g_encoder_rx_packet[0]);
     DL_DMA_setTransferSize(DMA, ENCODER_RX_CHAN_ID, ENCODER_RX_PACKET_SIZE);
-
     DL_DMA_enableChannel(DMA, ENCODER_RX_CHAN_ID);
 }
 
-void uart_encoder_query(uint8_t cmd, EncoderIndex idx)
+/** Abort the active transaction and return the bus/state machine to idle. */
+static void encoder_recover_transaction(void)
 {
-    ;
+    DL_DMA_disableChannel(DMA, ENCODER_RX_CHAN_ID);
+    DL_UART_Main_clearInterruptStatus(UART_ENCODER_INST,
+                                      UART_ENCODER_CLEAR_MASK |
+                                          DL_UART_MAIN_INTERRUPT_EOT_DONE);
+    encoder_flush_rx();
+    g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX] = 0u;
+    g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX] = 0u;
+    encoder_bus_idle();
+    g_encoder_rx_done = false;
+    g_encoder_state = ENCODER_STATE_IDLE;
+    g_encoder_wait_countdown = 0u;
+}
+
+/** Begin a QPOS command for one encoder address. */
+static void encoder_start_query(EncoderIndex idx)
+{
+    uint8_t msg;
+
     if (idx >= ENCODER_COUNT)
+    {
         return;
+    }
 
-    uint8_t msg = (uint8_t)(cmd | encoders[idx].addr);
+    g_encoder_active_idx = idx;
+    msg = (uint8_t)(CMD_QPOS | g_encoders[idx].addr);
 
-    /* Waits until FIFO has space to fill the data */
+    encoder_bus_idle();
+    DL_UART_Main_clearInterruptStatus(UART_ENCODER_INST,
+                                      UART_ENCODER_CLEAR_MASK |
+                                          DL_UART_MAIN_INTERRUPT_EOT_DONE);
+
+    encoder_tx_enable();
+
     while (DL_UART_Main_isTXFIFOFull(UART_ENCODER_INST))
     {
     }
+
     DL_UART_Main_transmitData(UART_ENCODER_INST, msg);
+    g_encoder_state = ENCODER_STATE_WAIT_TX_DONE;
+    g_encoder_wait_countdown = ENCODER_WAIT_TX_TIMEOUT;
 }
 
+/** Accept the DMA packet, apply software sign convention, and publish it. */
+static void encoder_finish_success(void)
+{
+    const uint16_t raw =
+        ((uint16_t)g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX] << 8) |
+        g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX];
+    int16_t count = (int16_t)raw;
+
+    if (g_encoder_active_idx == ENCODER2_IDX)
+    {
+        count = (int16_t)-count;
+    }
+
+    g_encoder_count[g_encoder_active_idx] = count;
+    g_encoder_last_packet[g_encoder_active_idx][ENCODER_RX_HIGH_BYTE_IDX] =
+        g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX];
+    g_encoder_last_packet[g_encoder_active_idx][ENCODER_RX_LOW_BYTE_IDX] =
+        g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX];
+    g_encoder_success_count[g_encoder_active_idx]++;
+    g_encoder_valid[g_encoder_active_idx] = true;
+    g_encoder_state = ENCODER_STATE_IDLE;
+    g_encoder_wait_countdown = 0u;
+    encoder_bus_idle();
+}
+
+/** Count a timeout/error and recover the shared bus. */
+static void encoder_handle_timeout(void)
+{
+    g_encoder_error_count[g_encoder_active_idx]++;
+    g_encoder_valid[g_encoder_active_idx] = false;
+    encoder_recover_transaction();
+}
+
+/** Initialize encoder state, DMA source, bus buffers, and poll scheduler. */
+void encoder_init(void)
+{
+    for (uint32_t i = 0; i < ENCODER_COUNT; i++)
+    {
+        g_encoder_count[i] = 0;
+        g_encoder_valid[i] = false;
+        g_encoder_last_packet[i][ENCODER_RX_HIGH_BYTE_IDX] = 0u;
+        g_encoder_last_packet[i][ENCODER_RX_LOW_BYTE_IDX] = 0u;
+        g_encoder_success_count[i] = 0u;
+        g_encoder_error_count[i] = 0u;
+    }
+
+    g_encoder_rx_done = false;
+    g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX] = 0u;
+    g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX] = 0u;
+    g_encoder_state = ENCODER_STATE_IDLE;
+    g_encoder_active_idx = ENCODER1_IDX;
+    g_encoder_next_idx = ENCODER1_IDX;
+    g_encoder_poll_due = true;
+    g_encoder_wait_countdown = 0u;
+
+    DL_DMA_setSrcAddr(DMA, ENCODER_RX_CHAN_ID,
+                      (uint32_t)(&UART_ENCODER_INST->RXDATA));
+    encoder_bus_idle();
+
+    DL_TimerG_clearInterruptStatus(ENC_SCHED_TIM_INST,
+                                   DL_TIMERG_INTERRUPT_ZERO_EVENT);
+    DL_TimerG_enableInterrupt(ENC_SCHED_TIM_INST,
+                              DL_TIMERG_INTERRUPT_ZERO_EVENT);
+    DL_TimerG_startCounter(ENC_SCHED_TIM_INST);
+}
+
+/** Record that the encoder scheduler has made one poll slot available. */
+void encoder_schedule(void)
+{
+    g_encoder_poll_due = true;
+}
+
+/** Advance one step of the encoder query/response state machine. */
+void encoder_service(void)
+{
+    switch (g_encoder_state)
+    {
+    case ENCODER_STATE_IDLE:
+        if (!g_encoder_poll_due)
+        {
+            return;
+        }
+
+        g_encoder_poll_due = false;
+        encoder_start_query(g_encoder_next_idx);
+        g_encoder_next_idx =
+            (g_encoder_next_idx == ENCODER1_IDX) ? ENCODER2_IDX : ENCODER1_IDX;
+        return;
+
+    case ENCODER_STATE_WAIT_TX_DONE:
+        if (DL_UART_Main_isTXFIFOEmpty(UART_ENCODER_INST) &&
+            !DL_UART_Main_isBusy(UART_ENCODER_INST))
+        {
+            DL_UART_Main_clearInterruptStatus(UART_ENCODER_INST,
+                                              DL_UART_MAIN_INTERRUPT_EOT_DONE);
+            encoder_tx_disable();
+            encoder_arm_rx_dma();
+            encoder_rx_enable();
+            g_encoder_state = ENCODER_STATE_WAIT_RX_DONE;
+            g_encoder_wait_countdown = ENCODER_WAIT_RX_TIMEOUT;
+            return;
+        }
+        break;
+
+    case ENCODER_STATE_WAIT_RX_DONE:
+        if (g_encoder_rx_done)
+        {
+            g_encoder_rx_done = false;
+            encoder_finish_success();
+            return;
+        }
+        break;
+
+    default:
+        encoder_recover_transaction();
+        return;
+    }
+
+    if (g_encoder_wait_countdown > 0u)
+    {
+        g_encoder_wait_countdown--;
+    }
+
+    if (g_encoder_wait_countdown == 0u)
+    {
+        encoder_handle_timeout();
+    }
+}
+
+/** Handle encoder UART interrupts and latch completed DMA receive packets. */
 void uart_encoder_irq(void)
 {
     switch (DL_UART_Main_getPendingInterrupt(UART_ENCODER_INST))
     {
     case DL_UART_MAIN_IIDX_DMA_DONE_RX:
         g_encoder_rx_done = true;
-
-        // temp testing code below
-        uint16_t data = (g_encoder_rx_packet[ENCODER_RX_HIGH_BYTE_IDX] << 4) +
-                        g_encoder_rx_packet[ENCODER_RX_LOW_BYTE_IDX];
-        UART_debug_printf("%d", data);
-
         break;
     default:
         break;
     }
 }
-
-/*
-volatile uint32_t g_encoder_poll_budget = 0;
-
-void TIMERx_IRQHandler(void)
-{
-    // clear timer IRQ flag...
-    g_encoder_poll_budget++;   // allows one query to be started
-}
-
-In main():
-
-while (1) {
-    encoder_service();
-    // other tasks...
-}ncoder_service() behavior
-
-If a transaction is in progress:
-
-check g_encoder_rx_done or timeout and finish it
-
-If idle and g_encoder_poll_budget > 0:
-
-decrement budget
-
-start the next query (round-robin)
-
-Timer at 200 Hz (every 5 ms)
-
-Each tick starts one query alternating encoders:
-
-tick 0: E1 QPOS
-
-tick 1: E2 QPOS
-So each encoder gets 100 Hz updates.
-
-Or go 100 Hz timer → each encoder 50 Hz. Both are fine.
-The missing piece: timeout + bus recovery
-
-Even if everything works now, you want a timeout so a missing reply doesn’t
-stall your state machine forever.
-
-Start a timestamp when you open RX
-
-If now - t_start > timeout_ms:
-
-close OE_RX
-
-mark error
-
-return to IDLE and move on
-
-At 19.2 kbps, a 2-byte reply takes ~1 ms on-wire (plus your “TX delay”), so a
-5–10 ms timeout is usually plenty.
-
-Minimal state machine outline
-
-States:
-
-IDLE
-
-WAIT_RX (DMA armed, RX open)
-
-When starting a query:
-
-TX phase
-
-(your OE_TX on)
-
-send command byte
-
-wait for EOT/TX complete (poll flag)
-
-OE_TX off
-
-RX phase
-
-arm_encoder_dma()
-
-OE_RX on
-
-set deadline = now + timeout
-
-In WAIT_RX:
-
-if g_encoder_rx_done:
-
-OE_RX off
-
-parse bytes → int16
-
-store pos + timestamp
-
-state = IDLE
-
-else if timeout:
-
-OE_RX off
-
-state = IDLE (and maybe increment an error counter)
-
-
-
-QPOS only
-
-typedef struct {
-    int16_t  pos;        // latest raw count
-    int16_t  pos_prev;
-    uint32_t t_ms;       // timestamp of latest
-    uint32_t t_prev_ms;
-    float    vel_cps;    // counts per second (computed)
-    // optionally: distance, vel filtered, etc.
-} EncState;
-
-
-
-
-
-*/

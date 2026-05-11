@@ -3,7 +3,10 @@
 #include "ti/driverlib/dl_timera.h"
 #include "ti/driverlib/dl_timerg.h"
 #include "ti_msp_dl_config.h"
-#include "uart_debug.h"
+
+/** @file ping.c
+ *  @brief Time-multiplexed trigger/echo handling for ten ultrasonic sensors.
+ */
 
 UltSensor g_ult[ULT_COUNT] = {
 
@@ -72,26 +75,90 @@ UltSensor g_ult[ULT_COUNT] = {
         },
 };
 
-// Ultrasonic Echo Pulse Width Captures in Microseconds
 volatile uint16_t g_ult_pw_us[ULT_COUNT];
+static uint16_t g_ult_pw_history[ULT_COUNT][3];
+static uint8_t g_ult_pw_history_count[ULT_COUNT];
+static uint8_t g_ult_pw_history_head[ULT_COUNT];
+static uint8_t g_ult_invalid_count[ULT_COUNT];
 
-// Scheduler index: which sensor will be pinged next
+/** Scheduler index: which sensor will be pinged next. */
 volatile uint8_t g_ult_idx = ULT0_IDX;
 
-// Latched index: which sensor this *current* ping/echo belongs to
+/** Latched index: which sensor this current ping/echo belongs to. */
 volatile uint8_t g_ult_active_idx = ULT0_IDX;
 
-// Float conversions for formatted display
+/** Return the median value from three pulse-width samples. */
+static uint16_t ult_median3(uint16_t a, uint16_t b, uint16_t c)
+{
+    if (a > b)
+    {
+        const uint16_t tmp = a;
+        a = b;
+        b = tmp;
+    }
+
+    if (b > c)
+    {
+        const uint16_t tmp = b;
+        b = c;
+        c = tmp;
+    }
+
+    if (a > b)
+    {
+        const uint16_t tmp = a;
+        a = b;
+        b = tmp;
+    }
+
+    return b;
+}
+
+/** Add a valid sample to the rolling median filter for one sensor. */
+static uint16_t ult_filter_valid_sample(uint8_t idx, uint16_t pulse_width_us)
+{
+    uint8_t head = g_ult_pw_history_head[idx];
+    uint8_t count = g_ult_pw_history_count[idx];
+
+    g_ult_pw_history[idx][head] = pulse_width_us;
+    head = (uint8_t)((head + 1u) % 3u);
+    g_ult_pw_history_head[idx] = head;
+
+    if (count < 3u)
+    {
+        count++;
+        g_ult_pw_history_count[idx] = count;
+    }
+
+    if (count == 1u)
+    {
+        return g_ult_pw_history[idx][0];
+    }
+
+    if (count == 2u)
+    {
+        const uint16_t a = g_ult_pw_history[idx][0];
+        const uint16_t b = g_ult_pw_history[idx][1];
+        return (uint16_t)(((uint32_t)a + (uint32_t)b) / 2u);
+    }
+
+    return ult_median3(g_ult_pw_history[idx][0], g_ult_pw_history[idx][1],
+                       g_ult_pw_history[idx][2]);
+}
+
+/** Convert ultrasonic echo pulse width to centimeters as float. */
 float ping_us_to_cm_float(float pulse_width_us)
 {
     return pulse_width_us / (float)PING_US_PER_CM;
 }
 
+/** Convert ultrasonic echo pulse width to inches as float. */
 float ping_us_to_in_float(float pulse_width_us)
 {
     return pulse_width_us / (float)PING_US_PER_IN;
 }
 
+/** Convert ultrasonic echo pulse width to meters as float. */
 float ping_us_to_m_float(float pulse_width_us)
 {
     // Convert µs → cm → meters
@@ -99,6 +166,7 @@ float ping_us_to_m_float(float pulse_width_us)
     return cm / (float)CM_PER_METER;
 }
 
+/** Convert ultrasonic echo pulse width to feet as float. */
 float ping_us_to_ft_float(float pulse_width_us)
 {
     // Convert µs → inches → feet
@@ -106,8 +174,21 @@ float ping_us_to_ft_float(float pulse_width_us)
     return inches / (float)IN_PER_FEET;
 }
 
+/** Initialize ultrasonic sensor state, mux routing, and schedule timer. */
 void ping_init(void)
 {
+    for (uint8_t i = 0u; i < ULT_COUNT; i++)
+    {
+        g_ult_pw_us[i] = ULT_ECHO_MAX_US;
+        g_ult_pw_history_count[i] = 0u;
+        g_ult_pw_history_head[i] = 0u;
+        g_ult_invalid_count[i] = 0u;
+        for (uint8_t j = 0u; j < 3u; j++)
+        {
+            g_ult_pw_history[i][j] = ULT_ECHO_MAX_US;
+        }
+    }
+
     // Disable Ping IO output driver
     PING_PORT->DOECLR31_0 = PING_TRIG_PIN;
     // Route Trigger pin to GPIO output
@@ -123,6 +204,7 @@ void ping_init(void)
     ULT_SCHED_TIM_INST->COUNTERREGS.CTRCTL |= GPTIMER_CTRCTL_EN_ENABLED;
 }
 
+/** Handle scheduler timer events for trigger, listen, and sensor advance. */
 void ult_sched_irq(void)
 {
     switch (DL_Timer_getPendingInterrupt(ULT_SCHED_TIM_INST))
@@ -208,8 +290,7 @@ void ult_sched_irq(void)
 
     case DL_TIMER_IIDX_LOAD:
     {
-        // You can keep this extra belt-and-suspenders disable if you like;
-        // echo IRQ also disables the timer on capture.
+
         ULT_ECHO_TIM_INST->COUNTERREGS.CTRCTL &= ~(GPTIMER_CTRCTL_EN_ENABLED);
 
         // Advance Scheduler Sensor Index to next enabled sensor
@@ -234,6 +315,7 @@ void ult_sched_irq(void)
     }
 }
 
+/** Capture and filter the active ultrasonic sensor's echo pulse width. */
 void ult_echo_irq(void)
 {
     switch (DL_Timer_getPendingInterrupt(ULT_ECHO_TIM_INST))
@@ -251,13 +333,34 @@ void ult_echo_irq(void)
         if ((pulse_width_us <= ULT_ECHO_MIN_US) ||
             (pulse_width_us >= ULT_ECHO_MAX_US))
         {
-            // Optional: mark invalid
-            // g_ult_pw_us[g_ult_active_idx] = 0xFFFF;
+            const uint8_t idx = g_ult_active_idx;
+
+            if (g_ult_invalid_count[idx] < 0xFFu)
+            {
+                g_ult_invalid_count[idx]++;
+            }
+
+            if (g_ult_invalid_count[idx] > ULT_MAX_INVALID_HOLD)
+            {
+                g_ult_pw_us[idx] = ULT_ECHO_MAX_US;
+                g_ult_pw_history_count[idx] = 0u;
+                g_ult_pw_history_head[idx] = 0u;
+                for (uint8_t j = 0u; j < 3u; j++)
+                {
+                    g_ult_pw_history[idx][j] = ULT_ECHO_MAX_US;
+                }
+            }
+
             return;
         }
 
         // Use the *latched* sensor index for this ping
-        g_ult_pw_us[g_ult_active_idx] = (uint16_t)pulse_width_us;
+        {
+            const uint8_t idx = g_ult_active_idx;
+            g_ult_invalid_count[idx] = 0u;
+            g_ult_pw_us[idx] =
+                ult_filter_valid_sample(idx, (uint16_t)pulse_width_us);
+        }
 
         // (Optional debug)
         // UART_printf("echo: active=%u sched=%u pw=%lu\r\n",
